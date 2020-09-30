@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="initializeApiDb.sql" />
+    <None Remove="initializeQuoteDb.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Sql\CreateAPIDb.sql" />
+    <EmbeddedResource Include="Sql\CreateQuotesDb.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="5.5.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.1" />
+    <PackageReference Include="ZNetCS.AspNetCore.Authentication.Basic" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MadeOfTech.SmartAPI\MadeOfTech.SmartAPI.csproj" />
+  </ItemGroup>
+
+</Project>
