@@ -23,6 +23,11 @@ namespace MadeOfTech.SmartAPI.Operations
 
             var endpointMetadata = context.GetEndpoint().Metadata.GetMetadata<SmartAPIEndpointMetadata>();
 
+            if (endpointMetadata.Options.Trigger_AfterOperation != null)
+            {
+                await endpointMetadata.Options.Trigger_AfterOperation(context, tableDataAdapter.Collection, inputObject, new string[] { id.ToString() });
+            }
+
             if (endpointMetadata.Options.Upsert_FillBodyWithMember)
             {
                 var array = new List<dynamic>();

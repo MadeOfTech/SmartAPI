@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Attribute = MadeOfTech.SmartAPI.Data.Models.Attribute;
+using MadeOfTech.SmartAPI.Exceptions;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -26,8 +27,31 @@ namespace Microsoft.AspNetCore.Builder
             SmartAPIOptions options = new SmartAPIOptions();
             if (setupAction != null) setupAction.Invoke(options);
 
+            API api = null;
             List<Collection> collections = null;
             List<Attribute> attributes = null;
+
+            using (var dbConnection = DBConnectionBuilder.Use(options.APIDb_ConnectionType, options.APIDb_ConnectionString))
+            {
+                var apiDataAdapter = new APIDataAdapter(dbConnection);
+                var apis = apiDataAdapter.getAll(options.APIDb_APIDesignation);
+                if (apis.Count() != 1)
+                {
+                    throw new SmartAPIException("No API definition has benn found inb the database.");
+                }
+                api = apis.First();
+
+                var collectionDataAdapter = new CollectionDataAdapter(dbConnection);
+                collections = collectionDataAdapter.getAll(options.APIDb_APIDesignation);
+
+                var attributeDataAdapter = new AttributeDataAdapter(dbConnection);
+                attributes = attributeDataAdapter.getAll(options.APIDb_APIDesignation);
+            }
+
+            if (string.IsNullOrEmpty(options.BasePath) && !string.IsNullOrEmpty(api.basepath))
+            {
+                options.BasePath = api.basepath;
+            }
 
             var basePath = options.BasePath ?? "";
             if (basePath.Length > 0)
@@ -35,16 +59,11 @@ namespace Microsoft.AspNetCore.Builder
                 basePath = basePath.Trim('/');
                 basePath = "/" + basePath + "/";
             }
-            options.BasePath = basePath;
-
-            using (var dbConnection = DBConnectionBuilder.Use(options.APIDb_ConnectionType, options.APIDb_ConnectionString))
+            else
             {
-                var collectionDataAdapter = new CollectionDataAdapter(dbConnection);
-                collections = collectionDataAdapter.getAll();
-
-                var attributeDataAdapter = new AttributeDataAdapter(dbConnection);
-                attributes = attributeDataAdapter.getAll();
+                basePath = "/";
             }
+            options.BasePath = basePath;
 
             var pipeline = endpoints
                 .CreateApplicationBuilder()
@@ -53,9 +72,9 @@ namespace Microsoft.AspNetCore.Builder
 
             if (!String.IsNullOrEmpty(options.OpenAPIDocument_Path))
             {
-                var generator = new SmartAPIDocumentGenerator(options, collections.ToArray(), attributes.ToArray());
+                var generator = new SmartAPIDocumentGenerator(options, api, collections.ToArray(), attributes.ToArray());
                 var document = generator.GetDocument();
-                endpoints.MapGet(options.OpenAPIDocument_Path, pipeline).WithMetadata(document);
+                endpoints.MapGet(options.BasePath + options.OpenAPIDocument_Path, pipeline).WithMetadata(document);
             }
 
             foreach (var collection in collections)

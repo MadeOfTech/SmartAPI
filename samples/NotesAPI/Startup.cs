@@ -44,8 +44,8 @@ namespace NotesAPI
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/notesapi/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = "notesapi/swagger";
+                c.SwaggerEndpoint("/notesapi/v1/swagger/swagger.json", "Notes API V1");
+                c.RoutePrefix = "notesapi/v1/swagger";
             });
 
             app.UseRouting();
@@ -59,10 +59,11 @@ namespace NotesAPI
                 {
                     options.APIDb_ConnectionType = "sqlite";
                     options.APIDb_ConnectionString = "Data Source=apidb.sqlite";
-                    options.BasePath = "notesapi/";
+                    options.APIDb_APIDesignation = "Notes API v1";
+                    options.BasePath = "notesapi/v1/";
                     options.Authentication_RequireAuthentication = true;
                     options.Authentication_GlobalModifyPolicyName = "access";
-                    options.OpenAPIDocument_Path = "/notesapi/swagger/v1/swagger.json";
+                    options.OpenAPIDocument_Path = "swagger/swagger.json";
                     options.InjectAttribute_Name = "member_id";
                     options.InjectAttribute_ValueEvaluator = context => {
                         return Int32.Parse(context.User.FindFirst(BasicAuthenticationHandler.ClaimType_MemberId).Value);

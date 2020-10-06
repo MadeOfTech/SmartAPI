@@ -111,9 +111,9 @@ namespace MadeOfTech.SmartAPI.Operations
                     }
                 }
             }
-            catch (SmartAPIException smartAPIException)
+            catch (HttpException smartAPIException)
             {
-                string host = (null == SmartAPIException.Host) ? "undefinedhost" : SmartAPIException.Host;
+                string host = (null == HttpException.Host) ? "undefinedhost" : HttpException.Host;
 
                 if (null == smartAPIException.Message)
                 {
@@ -131,7 +131,7 @@ namespace MadeOfTech.SmartAPI.Operations
                 {
                     message = "A conflict occured. Check correctness of your operation regarding with unicity constraints.";
                 }
-                string host = (null == SmartAPIException.Host) ? "undefinedhost" : SmartAPIException.Host;
+                string host = (null == HttpException.Host) ? "undefinedhost" : HttpException.Host;
                 string warningValue = ((int)httpStatusCode).ToString() + " " + host + " \"" + message + "\" " + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 context.Response.Headers.Add("Warning", warningValue);
                 context.Response.StatusCode = (int)httpStatusCode;
@@ -140,7 +140,7 @@ namespace MadeOfTech.SmartAPI.Operations
             {
                 var httpStatusCode = System.Net.HttpStatusCode.BadRequest;
                 string message = "A problem occured with your FIQL request. " + ex.Message;
-                string host = (null == SmartAPIException.Host) ? "undefinedhost" : SmartAPIException.Host;
+                string host = (null == HttpException.Host) ? "undefinedhost" : HttpException.Host;
                 string warningValue = ((int)httpStatusCode).ToString() + " " + host + " \"" + message + "\" " + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 context.Response.Headers.Add("Warning", warningValue);
                 context.Response.StatusCode = (int)httpStatusCode;
@@ -149,7 +149,7 @@ namespace MadeOfTech.SmartAPI.Operations
             {
                 var httpStatusCode = System.Net.HttpStatusCode.InternalServerError;
                 string message = "Internal server error";
-                string host = (null == SmartAPIException.Host) ? "undefinedhost" : SmartAPIException.Host;
+                string host = (null == HttpException.Host) ? "undefinedhost" : HttpException.Host;
                 string warningValue = ((int)httpStatusCode).ToString() + " " + host + " \"" + message + "\" " + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 context.Response.Headers.Add("Warning", warningValue);
                 context.Response.StatusCode = (int)httpStatusCode;

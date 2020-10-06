@@ -8,17 +8,10 @@
     }
   },
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "NotesAPI": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "notesapi/swagger",
+      "launchUrl": "notesapi/v1/swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

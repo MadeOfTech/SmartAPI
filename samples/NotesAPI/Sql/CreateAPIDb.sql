@@ -15,7 +15,7 @@ CREATE TABLE db (
 CREATE TABLE api (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
     designation VARCHAR(250) NOT NULL,
-    description VARCHAR(250) NOT NULL,
+    description TEXT NOT NULL,
     basepath VARCHAR(250) NOT NULL DEFAULT (''),
     CONSTRAINT ux_api_designation UNIQUE (designation)
 );
@@ -62,12 +62,12 @@ FROM dbtype
 WHERE designation='sqlite';
 
 INSERT INTO api (designation, description, basepath)
-VALUES ('notesapi', 'This API exposes folders and notes for each member, so that they can store their thoughts.', '/notesapi');
+VALUES ('Notes API v1', 'This API exposes folders and notes for each member, so that they can store their thoughts.', '/notesapi/v1');
 
 INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, description, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
 SELECT api.id, 'folders', 'folder', db.id, 'folder', 'A folder is a place where many notes are stored.', 1, 1, 1, 1, 1
 FROM db, api
-WHERE db.designation = 'notesdb' AND api.designation = 'notesapi';
+WHERE db.designation = 'notesdb' AND api.designation = 'Notes API v1';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex)
 SELECT id, 'id', 'id', 'integer', 'int32', 1, 0
@@ -80,7 +80,7 @@ FROM collection WHERE  tablename='folder';
 INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, description, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
 SELECT api.id, 'notes', 'note', db.id, 'note', 'A note is a message written by a member stored in a particular folder', 1, 1, 1, 1, 1
 FROM db, api
-WHERE db.designation = 'notesdb' AND api.designation = 'notesapi';
+WHERE db.designation = 'notesdb' AND api.designation = 'Notes API v1';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex, fiqlkeyindex)
 SELECT id, 'id', 'id', 'integer', 'int32', 1, 0, 1
@@ -97,7 +97,7 @@ FROM collection WHERE  tablename='note';
 INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, description, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
 SELECT api.id, 'pictures', 'picture', db.id, 'picture', 'A picture is related to a note and contains any binary file', 1, 1, 1, 1, 1
 FROM db, api
-WHERE db.designation = 'notesdb' AND api.designation = 'notesapi';
+WHERE db.designation = 'notesdb' AND api.designation = 'Notes API v1';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex, fiqlkeyindex)
 SELECT id, 'id', 'id', 'integer', 'int32', 1, 0, 1

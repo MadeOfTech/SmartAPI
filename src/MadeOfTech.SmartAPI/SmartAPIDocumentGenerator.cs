@@ -8,13 +8,15 @@ namespace MadeOfTech.SmartAPI
 {
     public class SmartAPIDocumentGenerator
     {
+        private API _api;
         private Collection[] _collections;
         private Attribute[] _attributes;
         private SmartAPIOptions _options;
 
-        public SmartAPIDocumentGenerator(SmartAPIOptions options, Collection[] collections, Attribute[] attributes)
+        public SmartAPIDocumentGenerator(SmartAPIOptions options, API api, Collection[] collections, Attribute[] attributes)
         {
             _options = options;
+            _api = api;
             _collections = collections;
             _attributes = attributes;
         }
@@ -25,8 +27,10 @@ namespace MadeOfTech.SmartAPI
             var attributes = _attributes;
 
             var swaggerDoc = new OpenApiDocument();
-            swaggerDoc.Info = new OpenApiInfo() { Title = "SmartAPI" };
-            //swaggerDoc.Servers = new List<OpenApiServer>() { new OpenApiServer() { Url = "https://localhost:5001", Description = "Wonderfull" } };
+            swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation };
+
+            swaggerDoc.Servers.Add(new OpenApiServer() { Description = _api.designation + " server", Url = _options.BasePath });
+
             var paths = new OpenApiPaths();
 
             foreach (var collection in collections)
@@ -34,9 +38,9 @@ namespace MadeOfTech.SmartAPI
                 swaggerDoc.Tags.Add(new OpenApiTag()
                 {
                     Name = collection.collectionname,
-                    Description = collection.description
+                    Description = collection.description,
                 });
-                string idDescription = "";
+                
                 var collection_attributes = new List<Attribute>();
                 var collection_keyattributes = new SortedList<int, Data.Models.Attribute>();
 
@@ -54,6 +58,8 @@ namespace MadeOfTech.SmartAPI
                     }
                 }
 
+                if (collection_attributes.Count() <= 0) continue;
+
                 List<OpenApiParameter> fiqlParameters = null;
                 if (collection_attributes.Where(x => x.fiqlkeyindex.HasValue).Count() > 0)
                 {
@@ -66,8 +72,7 @@ namespace MadeOfTech.SmartAPI
                     fiqlParameters.Add(new OpenApiParameter() { Name = "query", In = ParameterLocation.Query, Description = fiqlDescription, Required = false });
                 }
 
-                if (collection_attributes.Count() <= 0) continue;
-
+                string idDescription = "";
                 for (int index = 0; index < collection_keyattributes.Count; index++)
                 {
                     if (idDescription.Length > 0) idDescription += ",";
@@ -164,8 +169,8 @@ namespace MadeOfTech.SmartAPI
                     });
                 }
 
-                paths.Add(_options.BasePath + collection.collectionname, collectionPathItem);
-                paths.Add(_options.BasePath + collection.collectionname + "/" + idDescription, memberPathItem);
+                paths.Add("/" + collection.collectionname, collectionPathItem);
+                paths.Add("/" + collection.collectionname + "/" + idDescription, memberPathItem);
             }
 
             swaggerDoc.Paths = paths;

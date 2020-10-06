@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Security.Claims;
@@ -76,8 +77,8 @@ namespace QuotesAPI
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/quotesapi/swagger/v1/swagger.json", "QuotesAPI V1");
-                c.RoutePrefix = "quotesapi/swagger";
+                c.SwaggerEndpoint("/quotesapi/v1/swagger/swagger.json", "QuotesAPI V1");
+                c.RoutePrefix = "quotesapi/v1/swagger";
             });
 
             app.UseRouting();
@@ -91,16 +92,21 @@ namespace QuotesAPI
                 {
                     options.APIDb_ConnectionType = "sqlite";
                     options.APIDb_ConnectionString = "Data Source=apidb.sqlite";
-                    options.BasePath = "quotesapi/";
+                    options.APIDb_APIDesignation = "Quotes API v1";
+                    options.BasePath = "quotesapi/v1/";
                     options.Authentication_RequireAuthentication = true;
                     options.Authentication_GlobalReadPolicyName = "read_policy";
                     options.Authentication_GlobalModifyPolicyName = "modify_policy";
-                    options.OpenAPIDocument_Path = "/quotesapi/swagger/v1/swagger.json";
-                });
-
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
+                    options.OpenAPIDocument_Path = "swagger/swagger.json";
+                    options.Trigger_AfterOperation = async (context, collection, input, keys) =>
+                    {
+                        if (context.Request.Method == "POST" && collection.collectionname == "authors")
+                        {
+                            // A new author has been inserted.
+                            string name = input["name"];
+                            Console.WriteLine("A new author has been inserted : " + name);
+                        }
+                    };
                 });
             });
         }

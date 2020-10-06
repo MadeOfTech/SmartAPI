@@ -219,6 +219,30 @@ standard for upsert operations ie. POST and PUT. Indeed, in addition
 to returning the recommended headers it will fill the body with member
 representation. This behaviour will be reflected in the swagger documentation.
 
+### Trigger_AfterOperation
+
+This parameters allows you to trig actions based upon operation successfully
+done. This is an example, taken from QuotesAPI :
+
+```
+options.Trigger_AfterOperation = async (context, collection, input, keys) =>
+{
+    if (context.Request.Method == "POST" && collection.collectionname == "authors")
+    {
+        // A new author has been inserted.
+        string name = input["name"];
+        Console.WriteLine("A new author has been inserted : " + name);
+    }
+};
+```
+
+The parameters are the following :
+
+* `context` is an HttpContext, which give you many informations about the Http Call ;
+* `collection` is the collection on which operation is applyed ;
+* `input` is the object the caller sent into the body ;
+* `keys` is a string array containing key values, enumerated in the order decribed into the database.
+
 ## Samples
 
 2 samples are delivered with this solution : QuotesAPI and NotesAPI. Both of them
@@ -227,6 +251,23 @@ understanding, it's easier to use smaples in the following order :
 
 * QuotesAPI
 * NotesAPI
+
+### QuotesAPI
+
+This API is a open API to world in read mode, but is private for modifications.
+To access data in modification, you'll have to authenticate as `admin`, with the
+password `secret`. The authentication used in this sample is basic authentication.
+
+The API exposes 2 tables and one view to illustrate the simplicity to join data
+with the view to reduces requests.
+
+It must be noted that FiQL requests are allowed to request detailed quotes :
+this way, it's easy to search for quotes containing, for example, the word pepper :
+
+/quotesapi/v1/detailed_quotes?query=message==*pepper*
+
+This way, beware to performances (indexation) and volume of data (which can be
+huge).
 
 ### NotesAPI
 
@@ -253,6 +294,12 @@ allow SmartAPI to complete injection.
 ## Author
 
 * **Fabien Philippe** - *Initial work* - [GitHub](https://github.com/fphilippe), [LinkedIn](https://www.linkedin.com/in/fabienphilippe/)
+
+## Special thanks
+
+I warmly thank [API-K](https://www.api-k.com), and more particularly 
+[Pascal Roux](https://www.linkedin.com/in/pascal-roux-6528a118) for its trust and
+for the time he left me to complete this project!
 
 ## License
 

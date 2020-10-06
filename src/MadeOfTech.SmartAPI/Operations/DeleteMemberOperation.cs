@@ -13,6 +13,14 @@ namespace MadeOfTech.SmartAPI.Operations
             await tableDataAdapter.DeleteASync(keys);
 
             context.Response.StatusCode = 204;
+
+            var endpointMetadata = context.GetEndpoint().Metadata.GetMetadata<SmartAPIEndpointMetadata>();
+
+            if (endpointMetadata.Options.Trigger_AfterOperation != null)
+            {
+                await endpointMetadata.Options.Trigger_AfterOperation(context, tableDataAdapter.Collection, inputObject, keys);
+            }
+
             return null;
         }
     }

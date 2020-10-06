@@ -27,17 +27,25 @@ SELECT
 	collection.publish_deletemember
 FROM
 	collection INNER JOIN
+	api ON api_id=api.id INNER JOIN
 	db ON db_id=db.id INNER JOIN
-	dbtype ON dbtype_id=dbtype.id;
+	dbtype ON dbtype_id=dbtype.id
+WHERE
+	api.designation=@api_designation
+ORDER BY
+	collection.collectionname,
+	collection.id
 ";
 		public CollectionDataAdapter(IDbConnection dbConnection)
 		{
 			_dbConnection = dbConnection;
 		}
 
-		public List<Collection> getAll()
+		public List<Collection> getAll(string apiDesignation)
 		{
-			return _dbConnection.Query<Collection>(_getAllSqlStatement).ToList();
+			var parameters = new Dictionary<string, object>();
+			parameters.Add("api_designation", apiDesignation);
+			return _dbConnection.Query<Collection>(_getAllSqlStatement, parameters).ToList();
 		}
 	}
 }

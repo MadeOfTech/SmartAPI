@@ -6,35 +6,34 @@ using System.Linq;
 
 namespace MadeOfTech.SmartAPI.DataAdapters
 {
-    public class AttributeDataAdapter
+	public class AttributeDataAdapter
 	{
 		private IDbConnection _dbConnection;
 
 		private static string _getAllSqlStatement =
 @"
 SELECT
-	id,
-	collection_id,
-	attributename,
-	columnname,
-	description,
-	type,
-	format,
-	autovalue,
-	nullable,
-	keyindex,
-	fiqlkeyindex
+	attribute.id,
+	attribute.collection_id,
+	attribute.attributename,
+	attribute.columnname,
+	attribute.description,
+	attribute.type,
+	attribute.format,
+	attribute.autovalue,
+	attribute.nullable,
+	attribute.keyindex,
+	attribute.fiqlkeyindex
 FROM
-	attribute
-ORDER BY
-	collection_id,
-	IFNULL(keyindex, 2130706431),
-	id
-";
-		private static string _getByCollectionIdSqlStatement = _getAllSqlStatement +
-@"
+	attribute INNER JOIN
+	collection ON attribute.collection_id=collection.id INNER JOIN
+	api ON collection.api_id=api.id
 WHERE
-	collection_id = @collection_id
+	api.designation = @api_designation
+ORDER BY
+	attribute.collection_id,
+	IFNULL(attribute.keyindex, 2130706431),
+	attribute.id
 ";
 
 		public AttributeDataAdapter(IDbConnection dbConnection)
@@ -42,14 +41,11 @@ WHERE
 			_dbConnection = dbConnection;
 		}
 
-		public List<Attribute> getAll()
+		public List<Attribute> getAll(string apiDesignation)
 		{
-			return _dbConnection.Query<Attribute>(_getAllSqlStatement).ToList();
-		}
-
-		public List<Attribute> getByCollectionId(int collectionId)
-		{
-			return _dbConnection.Query<Attribute>(_getByCollectionIdSqlStatement, new { collection_id = collectionId }).ToList();
+			var parameters = new Dictionary<string, object>();
+			parameters.Add("api_designation", apiDesignation);
+			return _dbConnection.Query<Attribute>(_getAllSqlStatement, parameters).ToList();
 		}
 	}
 }
