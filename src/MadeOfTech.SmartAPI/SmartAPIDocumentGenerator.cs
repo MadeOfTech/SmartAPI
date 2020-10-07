@@ -27,7 +27,7 @@ namespace MadeOfTech.SmartAPI
             var attributes = _attributes;
 
             var swaggerDoc = new OpenApiDocument();
-            swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation };
+            swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation, Description = _api.description };
 
             swaggerDoc.Servers.Add(new OpenApiServer() { Description = _api.designation + " server", Url = _options.BasePath });
 

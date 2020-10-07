@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace System
 {
-    public static class HexExtension
+    internal static class HexExtension
     {
 
         /// <summary>

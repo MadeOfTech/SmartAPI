@@ -112,8 +112,13 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             {
                 if (attribute.autovalue) continue;
 
-                if (attribute.type == "string" && attribute.format == "binary")
+                if ((null == newRow[attribute.attributename]) || ((newRow)[attribute.attributename].Type == Newtonsoft.Json.Linq.JTokenType.Null))
                 {
+                    parameters.Add(attribute.attributename, null);
+                }
+                else if (attribute.type == "string" && attribute.format == "binary")
+                {
+                    Console.WriteLine(newRow[attribute.attributename]);
                     if (newRow[attribute.attributename].ToString().StartsWith("0x"))
                     {
                         string value = newRow[attribute.attributename].ToString();
