@@ -10,21 +10,24 @@ namespace MadeOfTech.SmartAPI
     {
         private API _api;
         private Collection[] _collections;
-        private Attribute[] _attributes;
         private SmartAPIOptions _options;
 
-        public SmartAPIDocumentGenerator(SmartAPIOptions options, API api, Collection[] collections, Attribute[] attributes)
+        public SmartAPIDocumentGenerator(SmartAPIOptions options, API api)
         {
             _options = options;
             _api = api;
-            _collections = collections;
-            _attributes = attributes;
+            var allCollections = new List<Collection>();
+            foreach (var db in api.dbs)
+            {
+                allCollections.AddRange(db.collections);
+            }
+            _collections = allCollections.ToArray();
         }
 
         public OpenApiDocument GetDocument()
         {
             var collections = _collections;
-            var attributes = _attributes;
+            //var attributes = _attributes;
 
             var swaggerDoc = new OpenApiDocument();
             swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation, Description = _api.description };
@@ -41,15 +44,14 @@ namespace MadeOfTech.SmartAPI
                     Description = collection.description,
                 });
                 
-                var collection_attributes = new List<Attribute>();
+                //var collection_attributes = new List<Attribute>();
                 var collection_keyattributes = new SortedList<int, Data.Models.Attribute>();
 
                 var openApiParameters = new List<OpenApiParameter>();
-                foreach (var attribute in attributes)
+                foreach (var attribute in collection.attributes)
                 {
                     if (attribute.collection_id == collection.id)
                     {
-                        collection_attributes.Add(attribute);
                         if (attribute.keyindex.HasValue)
                         {
                             collection_keyattributes.Add(attribute.keyindex.Value, attribute);
@@ -58,16 +60,16 @@ namespace MadeOfTech.SmartAPI
                     }
                 }
 
-                if (collection_attributes.Count() <= 0) continue;
+                if (collection.attributes.Count() <= 0) continue;
 
                 List<OpenApiParameter> fiqlParameters = null;
-                if (collection_attributes.Where(x => x.fiqlkeyindex.HasValue).Count() > 0)
+                if (collection.attributes.Where(x => x.fiqlkeyindex.HasValue).Count() > 0)
                 {
                     fiqlParameters = new List<OpenApiParameter>();
                     string fiqlDescription = @"query is the place where collection can be requested with criterias. ";
                     fiqlDescription += "If used, the query has to be compliant with FIQL specification (https://tools.ietf.org/html/draft-nottingham-atompub-fiql-00).\n";
                     fiqlDescription += "Only the following attributes can be requested via the query : ";
-                    fiqlDescription += collection_attributes.Where(x => x.fiqlkeyindex.HasValue).OrderBy(x => x.fiqlkeyindex.Value).Aggregate("", (current, next) => current + ", " + next.attributename).Remove(0, 2);
+                    fiqlDescription += collection.attributes.Where(x => x.fiqlkeyindex.HasValue).OrderBy(x => x.fiqlkeyindex.Value).Aggregate("", (current, next) => current + ", " + next.attributename).Remove(0, 2);
                     fiqlDescription += ".";
                     fiqlParameters.Add(new OpenApiParameter() { Name = "query", In = ParameterLocation.Query, Description = fiqlDescription, Required = false });
                 }
@@ -92,8 +94,8 @@ namespace MadeOfTech.SmartAPI
                         OperationId = "get_" + collection.collectionname,
                         Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
                         Responses = new OpenApiResponses()
-                            .WithCollectionReturnedSuccessResponse(collection, collection_attributes.ToArray())
-                            .WithBadRequestResponse(collection, collection_attributes)
+                            .WithCollectionReturnedSuccessResponse(collection)
+                            .WithBadRequestResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
                             .WithInternalServerErrorResponse()
@@ -109,7 +111,7 @@ namespace MadeOfTech.SmartAPI
                         Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
                         OperationId = "get_" + collection.membername,
                         Responses = new OpenApiResponses()
-                            .WithMemberReturnedSuccessResponse(collection, collection_attributes.ToArray())
+                            .WithMemberReturnedSuccessResponse(collection)
                             .WithNotFoundErrorResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
@@ -124,9 +126,9 @@ namespace MadeOfTech.SmartAPI
                         Description = "Post a new " + collection.membername + ".",
                         OperationId = "post_" + collection.collectionname,
                         Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
-                        RequestBody = new OpenApiRequestBody().WithMemberContent(collection, collection_attributes.ToArray(), false),
+                        RequestBody = new OpenApiRequestBody().WithMemberContent(collection, false),
                         Responses = new OpenApiResponses()
-                            .WithCreatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection, collection_attributes.ToArray())
+                            .WithCreatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection)
                             .WithConstraintErrorResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
@@ -142,10 +144,10 @@ namespace MadeOfTech.SmartAPI
                         Parameters = openApiParameters,
                         OperationId = "put_" + collection.collectionname,
                         Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
-                        RequestBody = new OpenApiRequestBody().WithMemberContent(collection, collection_attributes.ToArray(), true),
+                        RequestBody = new OpenApiRequestBody().WithMemberContent(collection, true),
                         Responses = new OpenApiResponses()
-                            .WithCreatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection, collection_attributes.ToArray())
-                            .WithUpdatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection, collection_attributes.ToArray())
+                            .WithCreatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection)
+                            .WithUpdatedSuccessResponse(_options.Upsert_FillBodyWithMember, collection)
                             .WithUnchangedResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()

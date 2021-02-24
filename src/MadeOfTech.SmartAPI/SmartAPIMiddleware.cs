@@ -21,7 +21,6 @@ namespace MadeOfTech.SmartAPI
             _next = next;
         }
 
-        
         public async Task Invoke(HttpContext httpContext)
         {
             var endpointMetadata = httpContext.GetEndpoint().Metadata.GetMetadata<SmartAPIEndpointMetadata>();
@@ -61,7 +60,7 @@ namespace MadeOfTech.SmartAPI
                         InjectAttribute_Name = endpointMetadata.Options.InjectAttribute_Name;
                         InjectAttribute_Value = endpointMetadata.Options.InjectAttribute_ValueEvaluator(httpContext);
                     }
-                    await operation.Invoke(httpContext, endpointMetadata.Collection, endpointMetadata.Attributes, InjectAttribute_Name, InjectAttribute_Value);
+                    await operation.Invoke(httpContext, endpointMetadata.Collection, InjectAttribute_Name, InjectAttribute_Value);
                 }
                 else
                 {

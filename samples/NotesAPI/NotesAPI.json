@@ -1,0 +1,62 @@
+﻿{
+  "designation": "Notes API v1",
+  "description": "This API exposes folders and notes for each member, so that they can store their thoughts.",
+  "basepath": "/notesapi/v1",
+  "dbs": [
+    {
+      "designation": "notesdb",
+      "dbtype": "sqlite",
+      "connectionstring": "Data Source=notesdb.sqlite",
+      "collections": [
+        {
+          "collectionname": "folders",
+          "membername": "folder",
+          "tablename": "folder",
+          "description": "A folder is a place where many notes are stored.",
+          "publish_getcollection": 1,
+          "publish_getmember": 1,
+          "publish_postmember": 1,
+          "publish_putmember": 1,
+          "publish_deletemember": 1,
+          "attributes": [
+            { "attributename": "id", "columnname": "id", "type": "integer", "format": "int32", "autovalue": 1, "keyindex": 1 },
+            { "attributename": "title", "columnname": "title", "type": "string"  }
+          ]
+        },
+        {
+          "collectionname": "notes",
+          "membername": "note",
+          "tablename": "note",
+          "description": "A note is a message written by a member stored in a particular folder.",
+          "publish_getcollection": 1,
+          "publish_getmember": 1,
+          "publish_postmember": 1,
+          "publish_putmember": 1,
+          "publish_deletemember": 1,
+          "attributes": [
+            { "attributename": "id", "columnname": "id", "type": "integer", "format": "int32", "autovalue": 1, "keyindex": 0, "fiqlkeyindex": 1 },
+            { "attributename": "title", "columnname": "title", "description": "The title of the note", "type": "string", "fiqlkeyindex": 2 },
+            { "attributename": "content", "columnname": "content", "description": "The content of the note. It is recommanded to exclude the title from this data !", "type": "string", "fiqlkeyindex": 3 }
+          ]
+        },
+        {
+          "collectionname": "pictures",
+          "membername": "picture",
+          "tablename": "picture",
+          "description": "A picture is related to a note and contains any binary file.",
+          "publish_getcollection": 1,
+          "publish_getmember": 1,
+          "publish_postmember": 1,
+          "publish_putmember": 1,
+          "publish_deletemember": 1,
+          "attributes": [
+            { "attributename": "id", "columnname": "id", "type": "integer", "format": "int32", "autovalue": 1, "keyindex": 0, "fiqlkeyindex": 1 },
+            { "attributename": "note_id", "columnname": "note_id", "type": "integer", "format": "int32", "fiqlkeyindex": 2 },
+            { "attributename": "title", "columnname": "title", "description": "The title of the picture", "type": "string", "fiqlkeyindex": 3 },
+            { "attributename": "data", "columnname": "data", "description": "The data of the picture", "type": "string", "format":  "binary", "fiqlkeyindex": 3 }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Authors>Fabien Philippe</Authors>
+    <Version>1.1.0</Version>
+    <Company>MadeOfTech</Company>
+    <Product>MadeOfTech.SmartAPI</Product>
+    <Description>This sample API is a open API to world in read mode, but is private for modifications.
+To access data in modification, you'll have to authenticate as `admin`, with the
+password `secret`. The authentication used in this sample is basic authentication.</Description>
+    <Copyright>Fabien Philippe</Copyright>
+    <PackageLicenseExpression>Apache-2.0+</PackageLicenseExpression>
+    <PackageProjectUrl>https://smartapi.madeoftech.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MadeOfTech/SmartAPI</RepositoryUrl>
+    <PackageTags>rest json xml crud api swagger middleware asp-net-core quotesapi</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="5.5.1" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.1" />
-    <PackageReference Include="ZNetCS.AspNetCore.Authentication.Basic" Version="4.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
+    <PackageReference Include="ZNetCS.AspNetCore.Authentication.Basic" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

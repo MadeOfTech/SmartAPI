@@ -15,7 +15,6 @@ namespace MadeOfTech.SmartAPI
         }
         internal EndpointOperation Operation { get; }
         internal Collection Collection { get; }
-        internal Attribute[] Attributes { get; }
         internal SmartAPIOptions Options { get; }
         internal SmartAPIEndpointMetadata()
         {
@@ -23,14 +22,12 @@ namespace MadeOfTech.SmartAPI
         internal SmartAPIEndpointMetadata(
             SmartAPIOptions options,
             EndpointOperation operation,
-            Collection collection,
-            Attribute[] attributes
+            Collection collection
             )
         {
             Options = options;
             Operation = operation;
             Collection = collection;
-            Attributes = attributes;
         }
     }
 }

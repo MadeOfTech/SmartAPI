@@ -25,7 +25,7 @@ REST is a fantastic approach since operations described are simple :
 create, read, update and delete. All of these verbs are more or less related
 to the traditionnal vocabulary of SQL, INSERT, SELECT, UPDATE and DELETE.
 More or less only, since CREATE can be done thru POST and PUT verbs. But,
-let's get optimitic : why continue to write code that take a REST request to
+let's get optimistic : why continue to write code that take a REST request to
 transform it into a SQL request ? From my point of view, it was sufficient
 to automate database access based upon verb and ressource used in the request.
 
@@ -254,7 +254,7 @@ understanding, it's easier to use smaples in the following order :
 
 ### QuotesAPI
 
-This API is a open API to world in read mode, but is private for modifications.
+This sample API is a open API to world in read mode, but is private for modifications.
 To access data in modification, you'll have to authenticate as `admin`, with the
 password `secret`. The authentication used in this sample is basic authentication.
 
@@ -271,7 +271,7 @@ huge).
 
 ### NotesAPI
 
-This API is user centric and exposed data that are stored in a common DB. The user
+This sample API is user centric and exposed data that are stored in a common DB. The user
 has to login to use API and to access to ressources : folders and notes. Basically,
 notes are small messages with title and content that are stored in a folder.
 

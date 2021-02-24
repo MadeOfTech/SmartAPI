@@ -2,21 +2,36 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.1.0</Version>
+    <Authors>Fabien Philippe</Authors>
+    <Company>MadeOfTech</Company>
+    <Product>MadeOfTech.SmartAPI</Product>
+    <Description>This sample API is user centric and exposed data that are stored in a common DB. The user
+has to login to use API and to access to ressources : folders and notes. Basically,
+notes are small messages with title and content that are stored in a folder.</Description>
+    <Copyright>Fabien Philippe</Copyright>
+    <PackageLicenseExpression>Apache-2.0+</PackageLicenseExpression>
+    <PackageProjectUrl>https://smartapi.madeoftech.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MadeOfTech/SmartAPI</RepositoryUrl>
+    <PackageTags>rest json xml crud api swagger middleware asp-net-core notesapi</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Sql\CreateAPIDb.sql" />
+    <Content Remove="NotesAPI.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Sql\CreateNotesDb.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Sql\CreateAPIDb.sql" />
+    <EmbeddedResource Include="NotesAPI.json" />
     <EmbeddedResource Include="Sql\CreateNotesDb.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="5.5.1" />
-    <PackageReference Include="ZNetCS.AspNetCore.Authentication.Basic" Version="4.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="6.0.7" />
+    <PackageReference Include="ZNetCS.AspNetCore.Authentication.Basic" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

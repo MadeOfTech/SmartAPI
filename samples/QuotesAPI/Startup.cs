@@ -98,7 +98,9 @@ namespace QuotesAPI
                     options.Authentication_GlobalReadPolicyName = "read_policy";
                     options.Authentication_GlobalModifyPolicyName = "modify_policy";
                     options.OpenAPIDocument_Path = "swagger/swagger.json";
+#pragma warning disable CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
                     options.Trigger_AfterOperation = async (context, collection, input, keys) =>
+#pragma warning restore CS1998 // Cette méthode async n'a pas d'opérateur 'await' et elle s'exécutera de façon synchrone
                     {
                         if (context.Request.Method == "POST" && collection.collectionname == "authors")
                         {

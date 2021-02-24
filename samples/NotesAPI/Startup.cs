@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -55,10 +57,18 @@ namespace NotesAPI
 
             app.UseEndpoints(endpoints =>
             {
+                string API_JsonDescription = "";
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("NotesAPI.NotesAPI.json"))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    API_JsonDescription = reader.ReadToEnd();
+                }
+                
                 endpoints.MapSmartAPI(options =>
                 {
-                    options.APIDb_ConnectionType = "sqlite";
-                    options.APIDb_ConnectionString = "Data Source=apidb.sqlite";
+                    /*options.APIDb_ConnectionType = "sqlite";
+                    options.APIDb_ConnectionString = "Data Source=apidb.sqlite";*/
+                    options.API_JsonDescription = API_JsonDescription;
                     options.APIDb_APIDesignation = "Notes API v1";
                     options.BasePath = "notesapi/v1/";
                     options.Authentication_RequireAuthentication = true;

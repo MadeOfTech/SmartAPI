@@ -24,7 +24,6 @@ namespace NotesAPI
         private static void InitializeDbs()
         {
             File.Delete("notesdb.sqlite");
-            File.Delete("apidb.sqlite");
 
             if (!System.IO.File.Exists("notesdb.sqlite"))
             {
@@ -32,20 +31,6 @@ namespace NotesAPI
                 using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("NotesAPI.Sql.CreateNotesDb.sql"))
                 using (StreamReader reader = new StreamReader(stream))
                 using (var sqliteConnection = new SQLiteConnection("Data Source=notesdb.sqlite"))
-                {
-                    var init = reader.ReadToEnd();
-                    sqliteConnection.Open();
-                    sqliteConnection.Execute(init);
-                    sqliteConnection.Close();
-                }
-            }
-
-            if (!System.IO.File.Exists("apidb.sqlite"))
-            {
-                // Configure a DB for the configuration of our api.
-                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("NotesAPI.Sql.CreateAPIDb.sql"))
-                using (StreamReader reader = new StreamReader(stream))
-                using (var sqliteConnection = new SQLiteConnection("Data Source=apidb.sqlite"))
                 {
                     var init = reader.ReadToEnd();
                     sqliteConnection.Open();

@@ -1,18 +1,4 @@
-﻿CREATE TABLE dbtype (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-    designation varchar(250) NOT NULL,
-    CONSTRAINT ux_dbtype_designation UNIQUE (designation)
-);
-
-CREATE TABLE db (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	designation VARCHAR(250) NOT NULL,
-	dbtype_id INT NOT NULL,
-	connectionstring VARCHAR(250) NOT NULL,
-    CONSTRAINT fk_db__dbtype FOREIGN KEY (dbtype_id) REFERENCES dbtype (id)
-);
-
-CREATE TABLE api (
+﻿CREATE TABLE api (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
     designation VARCHAR(250) NOT NULL,
     description VARCHAR(250) NOT NULL,
@@ -20,9 +6,16 @@ CREATE TABLE api (
     CONSTRAINT ux_api_designation UNIQUE (designation)
 );
 
+CREATE TABLE db (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	designation VARCHAR(250) NOT NULL,
+	dbtype_id INT NOT NULL,
+	connectionstring VARCHAR(250) NOT NULL,
+    CONSTRAINT fk_db__dbtype FOREIGN KEY (api_id) REFERENCES api (id)
+);
+
 CREATE TABLE collection (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-    api_id INT NOT NULL,
     collectionname varchar(250) NOT NULL,
     membername varchar(250) NOT NULL,
     db_id INT NOT NULL,

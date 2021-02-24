@@ -22,19 +22,17 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
         private readonly IDbConnection _dbConnection;
         private readonly Collection _collection;
-        private readonly Data.Models.Attribute[] _attributes;
 
         private string _injectedAttributeName;
         private object _injectedAttributeValue;
 
         public Collection Collection { get { return _collection; } }
-        public Data.Models.Attribute[] Attributes { get { return _attributes; } }
+        public IEnumerable<Data.Models.Attribute> Attributes { get { return _collection.attributes; } }
 
-        public TableDataAdapter(IDbConnection dbConnection, Collection collection, Data.Models.Attribute[] attributes)
+        public TableDataAdapter(IDbConnection dbConnection, Collection collection)
         {
             _dbConnection = dbConnection;
             _collection = collection;
-            _attributes = attributes;
         }
 
         /// <summary>
@@ -108,7 +106,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
             DynamicParameters parameters = new DynamicParameters();
 
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (attribute.autovalue) continue;
 
@@ -155,7 +153,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             DynamicParameters parameters = new DynamicParameters();
 
             bool upsert = true;
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 string value = null;
                 if (attribute.keyindex.HasValue) value = keys[attribute.keyindex.Value];
@@ -234,11 +232,11 @@ namespace MadeOfTech.SmartAPI.DataAdapters
         #region Inner methods
         private string ComputeProjectedAttributes()
         {
-            if (null == _attributes) return "*";
-            if (0 == _attributes.Length) return "*";
+            if (null == _collection.attributes) return "*";
+            if (0 == _collection.attributes.Count()) return "*";
 
             var attributesSqlStatement = "";
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
                 attributesSqlStatement += $"{attribute.columnname} AS {attribute.attributename}";
@@ -248,11 +246,11 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
         private string ComputeInsertedAttributes()
         {
-            if (null == _attributes) return null;
-            if (0 == _attributes.Length) return null;
+            if (null == _collection.attributes) return null;
+            if (0 == _collection.attributes.Count()) return null;
 
             var attributesSqlStatement = "";
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (attribute.autovalue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
@@ -268,11 +266,11 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
         private string ComputeInsertedAttributesValues()
         {
-            if (null == _attributes) return null;
-            if (0 == _attributes.Length) return null;
+            if (null == _collection.attributes) return null;
+            if (0 == _collection.attributes.Count()) return null;
 
             var attributesSqlStatement = "";
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (attribute.autovalue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
@@ -287,11 +285,11 @@ namespace MadeOfTech.SmartAPI.DataAdapters
         }
         private string ComputeUpdatedAttributesValues()
         {
-            if (null == _attributes) return null;
-            if (0 == _attributes.Length) return null;
+            if (null == _collection.attributes) return null;
+            if (0 == _collection.attributes.Count()) return null;
 
             var attributesSqlStatement = "";
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (attribute.keyindex.HasValue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
@@ -371,9 +369,9 @@ namespace MadeOfTech.SmartAPI.DataAdapters
         List<Data.Models.Attribute> GetKeyAttributes()
         {
             var attributes = new List<Data.Models.Attribute>();
-            if (null == _attributes) return attributes;
+            if (null == _collection.attributes) return attributes;
 
-            foreach (var attribute in _attributes)
+            foreach (var attribute in _collection.attributes)
             {
                 if (attribute.keyindex.HasValue) attributes.Add(attribute);
             }

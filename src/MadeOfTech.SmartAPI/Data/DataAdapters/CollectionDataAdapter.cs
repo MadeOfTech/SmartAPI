@@ -16,8 +16,6 @@ SELECT
 	collection.id,
 	collection.collectionname,
     collection.membername,
-	dbtype.designation AS dbtype_designation,
-	db.connectionstring,
 	collection.tablename,
 	collection.description,
 	collection.publish_getcollection,
@@ -27,9 +25,8 @@ SELECT
 	collection.publish_deletemember
 FROM
 	collection INNER JOIN
-	api ON api_id=api.id INNER JOIN
 	db ON db_id=db.id INNER JOIN
-	dbtype ON dbtype_id=dbtype.id
+	api ON db.api_id=api.id
 WHERE
 	api.designation=@api_designation
 ORDER BY

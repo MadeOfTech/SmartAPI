@@ -78,7 +78,7 @@ namespace MadeOfTech.SmartAPI.Operations
             OutputObjectType = outputObjectType;
         }
 
-        public async Task Invoke(HttpContext context, Collection collection, Data.Models.Attribute[] attributes, string injectAttributeName, object injectAttributeValue)
+        public async Task Invoke(HttpContext context, Collection collection, string injectAttributeName, object injectAttributeValue)
         {
             try
             {
@@ -94,11 +94,11 @@ namespace MadeOfTech.SmartAPI.Operations
 
                 var input = await InputAsync(context);
 
-                var connectionString = collection.connectionstring;
-                using (var connection = DBConnectionBuilder.Use(collection.dbtype_designation, collection.connectionstring))
+                var connectionString = collection.db.connectionstring;
+                using (var connection = DBConnectionBuilder.Use(collection.db.dbtype, collection.db.connectionstring))
                 {
                     await connection.OpenAsync();
-                    using (var tableDataAdapter = new TableDataAdapter(connection, collection, attributes))
+                    using (var tableDataAdapter = new TableDataAdapter(connection, collection))
                     {
                         if (!string.IsNullOrEmpty(injectAttributeName))
                         {
@@ -107,7 +107,7 @@ namespace MadeOfTech.SmartAPI.Operations
                         var output = await InternalHandlerASync(context, input, tableDataAdapter);
                         await connection.CloseAsync();
 
-                        await OutputAsync(context, output, collection, attributes);
+                        await OutputAsync(context, output, collection);
                     }
                 }
             }
@@ -145,7 +145,7 @@ namespace MadeOfTech.SmartAPI.Operations
                 context.Response.Headers.Add("Warning", warningValue);
                 context.Response.StatusCode = (int)httpStatusCode;
             }
-            catch (Exception ex)
+            catch (Exception /*ex*/)
             {
                 var httpStatusCode = System.Net.HttpStatusCode.InternalServerError;
                 string message = "Internal server error";
@@ -185,7 +185,7 @@ namespace MadeOfTech.SmartAPI.Operations
             return null;
         }
 
-        private async Task OutputAsync(HttpContext context, OperationOutput smartAPIRouterOutput, Collection collection, Data.Models.Attribute[] attributes)
+        private async Task OutputAsync(HttpContext context, OperationOutput smartAPIRouterOutput, Collection collection)
         {
             if (OutputObjectType == ObjectType.Void) return;
             if (null == smartAPIRouterOutput) return;
@@ -229,7 +229,7 @@ namespace MadeOfTech.SmartAPI.Operations
                         {
                             xmlSerializer.Serialize(writer, outputObject);
                         }
-                        catch (Exception ex)
+                        catch (Exception /*ex*/)
                         {
                             throw;
                         }

@@ -10,21 +10,21 @@ namespace MadeOfTech.SmartAPI
 {
     public static class OpenApiDocumentExtensions
     {
-        public static OpenApiRequestBody WithMemberContent(this OpenApiRequestBody openApiRequestBody, Collection collection, Attribute[] collection_attributes, bool excludeKeyAttributes = false)
+        public static OpenApiRequestBody WithMemberContent(this OpenApiRequestBody openApiRequestBody, Collection collection, bool excludeKeyAttributes = false)
         {
             openApiRequestBody.Content = new Dictionary<string, OpenApiMediaType>();
-            var type = GenerateMemberType(collection, collection_attributes, excludeKeyAttributes, true);
+            var type = GenerateMemberType(collection, excludeKeyAttributes, true);
             openApiRequestBody.Content.Add("application/json", type);
             openApiRequestBody.Content.Add("application/xml", type);
             return openApiRequestBody;
         }
 
-        public static OpenApiResponses WithCollectionReturnedSuccessResponse(this OpenApiResponses responses, Collection collection, Attribute[] collection_attributes)
+        public static OpenApiResponses WithCollectionReturnedSuccessResponse(this OpenApiResponses responses, Collection collection)
         {
             var response = new OpenApiResponse();
             response.Description = collection.collectionname + " successfully returned.";
             response.Content = new Dictionary<string, OpenApiMediaType>();
-            var arrtype = GenerateCollectionSchema(collection, collection_attributes);
+            var arrtype = GenerateCollectionSchema(collection);
 
             response.Content.Add("application/json", arrtype);
             response.Content.Add("application/xml", arrtype);
@@ -33,12 +33,12 @@ namespace MadeOfTech.SmartAPI
             return responses;
         }
 
-        public static OpenApiResponses WithMemberReturnedSuccessResponse(this OpenApiResponses responses, Collection collection, Attribute[] collection_attributes)
+        public static OpenApiResponses WithMemberReturnedSuccessResponse(this OpenApiResponses responses, Collection collection)
         {
             var response = new OpenApiResponse();
             response.Description = collection.membername + " successfully returned.";
             response.Content = new Dictionary<string, OpenApiMediaType>();
-            var type = GenerateMemberType(collection, collection_attributes);
+            var type = GenerateMemberType(collection);
 
             response.Content.Add("application/json", type);
             response.Content.Add("application/xml", type);
@@ -53,14 +53,14 @@ namespace MadeOfTech.SmartAPI
             return responses;
         }
 
-        public static OpenApiResponses WithCreatedSuccessResponse(this OpenApiResponses responses, bool fillBodyWithMember, Collection collection, Attribute[] collection_attributes)
+        public static OpenApiResponses WithCreatedSuccessResponse(this OpenApiResponses responses, bool fillBodyWithMember, Collection collection)
         {
             if (fillBodyWithMember)
             {
                 var response = new OpenApiResponse();
                 response.Description = collection.membername + " created.";
                 response.Content = new Dictionary<string, OpenApiMediaType>();
-                var type = GenerateMemberType(collection, collection_attributes);
+                var type = GenerateMemberType(collection);
 
                 response.Content.Add("application/json", type);
                 response.Content.Add("application/xml", type);
@@ -86,14 +86,14 @@ namespace MadeOfTech.SmartAPI
             return responses;
         }
 
-        public static OpenApiResponses WithUpdatedSuccessResponse(this OpenApiResponses responses, bool fillBodyWithMember, Collection collection, Attribute[] collection_attributes)
+        public static OpenApiResponses WithUpdatedSuccessResponse(this OpenApiResponses responses, bool fillBodyWithMember, Collection collection)
         {
             if (fillBodyWithMember)
             {
                 var response = new OpenApiResponse();
                 response.Description = collection.membername + " updated.";
                 response.Content = new Dictionary<string, OpenApiMediaType>();
-                var type = GenerateMemberType(collection, collection_attributes);
+                var type = GenerateMemberType(collection);
 
                 response.Content.Add("application/json", type);
                 response.Content.Add("application/xml", type);
@@ -113,9 +113,9 @@ namespace MadeOfTech.SmartAPI
             return responses;
         }
 
-        public static OpenApiResponses WithBadRequestResponse(this OpenApiResponses responses, Collection collection, IEnumerable<Attribute> attributes)
+        public static OpenApiResponses WithBadRequestResponse(this OpenApiResponses responses, Collection collection)
         {
-            if (attributes.Select(x => x.fiqlkeyindex.HasValue).Count() > 0)
+            if (collection.attributes.Select(x => x.fiqlkeyindex.HasValue).Count() > 0)
             {
                 responses.Add("400", new OpenApiResponse() { Description = "the request is not correctly formatted." });
             }
@@ -153,10 +153,9 @@ namespace MadeOfTech.SmartAPI
         }
 
         private static OpenApiMediaType GenerateCollectionSchema(
-            Collection collection,
-            Attribute[] collection_attributes)
+            Collection collection)
         {
-            var type = GenerateMemberType(collection, collection_attributes);
+            var type = GenerateMemberType(collection);
 
             var arrtype = new OpenApiMediaType();
 
@@ -179,7 +178,6 @@ namespace MadeOfTech.SmartAPI
 
         private static OpenApiMediaType GenerateMemberType(
             Collection collection,
-            Attribute[] collection_attributes,
             bool excludeKeyAttributes = false,
             bool excludeKeyAutoAttributes = false)
         {
@@ -197,7 +195,7 @@ namespace MadeOfTech.SmartAPI
                 type.Schema.Description = collection.description;
             }
 
-            foreach (var attribute in collection_attributes)
+            foreach (var attribute in collection.attributes)
             {
                 if (attribute.keyindex.HasValue && excludeKeyAttributes) continue;
                 if (attribute.keyindex.HasValue && attribute.autovalue && excludeKeyAutoAttributes) continue;

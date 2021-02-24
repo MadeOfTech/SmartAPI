@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Attribute = MadeOfTech.SmartAPI.Data.Models.Attribute;
 using MadeOfTech.SmartAPI.Exceptions;
+using Newtonsoft.Json;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -28,24 +29,95 @@ namespace Microsoft.AspNetCore.Builder
             if (setupAction != null) setupAction.Invoke(options);
 
             API api = null;
-            List<Collection> collections = null;
-            List<Attribute> attributes = null;
 
-            using (var dbConnection = DBConnectionBuilder.Use(options.APIDb_ConnectionType, options.APIDb_ConnectionString))
+            if (null != options.APIDb_ConnectionType && null != options.APIDb_ConnectionString && null == options.API_JsonDescription)
             {
-                var apiDataAdapter = new APIDataAdapter(dbConnection);
-                var apis = apiDataAdapter.getAll(options.APIDb_APIDesignation);
-                if (apis.Count() != 1)
+                using (var dbConnection = DBConnectionBuilder.Use(options.APIDb_ConnectionType, options.APIDb_ConnectionString))
                 {
-                    throw new SmartAPIException("No API definition has benn found inb the database.");
+                    var apiDataAdapter = new APIDataAdapter(dbConnection);
+                    var apis = apiDataAdapter.getAll(options.APIDb_APIDesignation);
+                    if (apis.Count() != 1)
+                    {
+                        throw new SmartAPIException("No API definition has been found in the database.");
+                    }
+                    api = apis.First();
+
+                    var dbDataAdapter = new DbDataAdapter(dbConnection);
+                    var dbs = dbDataAdapter.getAll(options.APIDb_APIDesignation);
+                    if (dbs.Count() <= 1)
+                    {
+                        throw new SmartAPIException("No Db definition has been found in the database.");
+                    }
+                    api.dbs = dbs.ToArray();
+                    
+
+                    var collectionDataAdapter = new CollectionDataAdapter(dbConnection);
+                    var collections = collectionDataAdapter.getAll(options.APIDb_APIDesignation);
+                    if (collections.Count() <= 1)
+                    {
+                        throw new SmartAPIException("No Collection definition has been found in the database.");
+                    }
+                    foreach (var db in api.dbs)
+                    {
+                        db.api = api;
+
+                        if (!string.IsNullOrEmpty(options.DataDb_ConnectionHost) && db.connectionstring.Contains("{host}"))
+                        {
+                            db.connectionstring = db.connectionstring.Replace("{host}", options.DataDb_ConnectionHost);
+                        }
+                        if (!string.IsNullOrEmpty(options.DataDb_ConnectionUser) && db.connectionstring.Contains("{user}"))
+                        {
+                            db.connectionstring = db.connectionstring.Replace("{user}", options.DataDb_ConnectionUser);
+                        }
+                        if (!string.IsNullOrEmpty(options.DataDb_ConnectionPwd) && db.connectionstring.Contains("{pwd}"))
+                        {
+                            db.connectionstring = db.connectionstring.Replace("{pwd}", options.DataDb_ConnectionPwd);
+                        }
+
+                        var db_collection_list = new List<Collection>();
+                        foreach (var collection in collections)
+                        {
+                            if (collection.db_id.Value == db.id.Value)
+                            {
+                                db_collection_list.Add(collection);
+                                collection.db = db;
+                            }
+                        }
+                        db.collections = db_collection_list.ToArray();
+                    }
+
+                    var attributeDataAdapter = new AttributeDataAdapter(dbConnection);
+                    var attributes = attributeDataAdapter.getAll(options.APIDb_APIDesignation);
+
+                    foreach (var collection in collections)
+                    {
+                        var collection_attribute_list = new List<Attribute>();
+                        foreach (var attribute in attributes)
+                        {
+                            if (attribute.collection_id == collection.id.Value)
+                            {
+                                collection_attribute_list.Add(attribute);
+                            }
+                        }
+                        collection.attributes = collection_attribute_list.ToArray();
+                    }
                 }
-                api = apis.First();
+            }
+            else if (null != options.API_JsonDescription)
+            {
+                api = JsonConvert.DeserializeObject<API>(options.API_JsonDescription);
+                if (null == api) throw new SmartAPIException("No API definition has been found in the json document.");
+                if (null == api.dbs || api.dbs.Count() == 0) throw new SmartAPIException("No DB definition has been found in the api.");
+                foreach (var db in api.dbs)
+                {
+                    db.api = api;
+                    if (null == db.collections) throw new SmartAPIException("No Collection definition has been found in the db " + db.designation + ".");
 
-                var collectionDataAdapter = new CollectionDataAdapter(dbConnection);
-                collections = collectionDataAdapter.getAll(options.APIDb_APIDesignation);
-
-                var attributeDataAdapter = new AttributeDataAdapter(dbConnection);
-                attributes = attributeDataAdapter.getAll(options.APIDb_APIDesignation);
+                    foreach (var collection in db.collections)
+                    {
+                        collection.db = db;
+                    }
+                }
             }
 
             if (string.IsNullOrEmpty(options.BasePath) && !string.IsNullOrEmpty(api.basepath))
@@ -72,44 +144,21 @@ namespace Microsoft.AspNetCore.Builder
 
             if (!String.IsNullOrEmpty(options.OpenAPIDocument_Path))
             {
-                var generator = new SmartAPIDocumentGenerator(options, api, collections.ToArray(), attributes.ToArray());
+                var generator = new SmartAPIDocumentGenerator(options, api);
                 var document = generator.GetDocument();
                 endpoints.MapGet(options.BasePath + options.OpenAPIDocument_Path, pipeline).WithMetadata(document);
             }
 
-            foreach (var collection in collections)
+            foreach (var collection in api.collections)
             {
-                if (!string.IsNullOrEmpty(options.DataDb_ConnectionHost) && collection.connectionstring.Contains("{host}"))
+                if (collection.attributes.Count() > 0)
                 {
-                    collection.connectionstring = collection.connectionstring.Replace("{host}", options.DataDb_ConnectionHost);
-                }
-                if (!string.IsNullOrEmpty(options.DataDb_ConnectionUser) && collection.connectionstring.Contains("{user}"))
-                {
-                    collection.connectionstring = collection.connectionstring.Replace("{user}", options.DataDb_ConnectionUser);
-                }
-                if (!string.IsNullOrEmpty(options.DataDb_ConnectionPwd) && collection.connectionstring.Contains("{pwd}"))
-                {
-                    collection.connectionstring = collection.connectionstring.Replace("{pwd}", options.DataDb_ConnectionPwd);
-                }
+                    if (collection.publish_getcollection) endpoints.MapGet(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetCollection, collection).WithAuthentication(options, "get_" + collection.collectionname).WithCors(options);
+                    if (collection.publish_getmember) endpoints.MapGet(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetMember, collection).WithAuthentication(options, "get_" + collection.membername).WithCors(options);
 
-                List<Attribute> collection_attribute_list = new List<Attribute>();
-                foreach (var attribute in attributes)
-                {
-                    if (attribute.collection_id == collection.id)
-                    {
-                        collection_attribute_list.Add(attribute);
-                    }
-                }
-                var collection_attributes = collection_attribute_list.ToArray();
-
-                if (collection_attributes.Count() > 0)
-                {
-                    if (collection.publish_getcollection) endpoints.MapGet(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetCollection, collection, collection_attributes).WithAuthentication(options, "get_" + collection.collectionname).WithCors(options);
-                    if (collection.publish_getmember) endpoints.MapGet(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetMember, collection, collection_attributes).WithAuthentication(options, "get_" + collection.membername).WithCors(options);
-
-                    if (collection.publish_postmember) endpoints.MapPost(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PostMember, collection, collection_attributes).WithAuthentication(options, "post_" + collection.membername).WithCors(options);
-                    if (collection.publish_putmember) endpoints.MapPut(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PutMember, collection, collection_attributes).WithAuthentication(options, "put_" + collection.membername).WithCors(options);
-                    if (collection.publish_deletemember) endpoints.MapDelete(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.DeleteMember, collection, collection_attributes).WithAuthentication(options, "delete_" + collection.membername).WithCors(options);
+                    if (collection.publish_postmember) endpoints.MapPost(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PostMember, collection).WithAuthentication(options, "post_" + collection.membername).WithCors(options);
+                    if (collection.publish_putmember) endpoints.MapPut(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PutMember, collection).WithAuthentication(options, "put_" + collection.membername).WithCors(options);
+                    if (collection.publish_deletemember) endpoints.MapDelete(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.DeleteMember, collection).WithAuthentication(options, "delete_" + collection.membername).WithCors(options);
 
                     //endpoints.MapGet(collection.url + "/{id}/{attribute_name}", async context => { await getAttributeRouter.HandlerAsync(context, collection, collection_attributes); });
                 }
@@ -118,9 +167,9 @@ namespace Microsoft.AspNetCore.Builder
             return endpoints;
         }
 
-        private static TBuilder WithSmartAPIMetadata<TBuilder>(this TBuilder builder, SmartAPIOptions options, SmartAPIEndpointMetadata.EndpointOperation operation, Collection collection, Attribute[] attributes) where TBuilder : IEndpointConventionBuilder
+        private static TBuilder WithSmartAPIMetadata<TBuilder>(this TBuilder builder, SmartAPIOptions options, SmartAPIEndpointMetadata.EndpointOperation operation, Collection collection) where TBuilder : IEndpointConventionBuilder
         {
-            builder.WithMetadata(new SmartAPIEndpointMetadata(options, operation, collection, attributes));
+            builder.WithMetadata(new SmartAPIEndpointMetadata(options, operation, collection));
             return builder;
         }
 

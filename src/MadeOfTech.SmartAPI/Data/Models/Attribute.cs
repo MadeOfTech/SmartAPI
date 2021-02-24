@@ -2,7 +2,6 @@
 {
     public class Attribute
     {
-        public int id { get; set; }
         public int collection_id { get; set; }
         public string attributename { get; set; }
         public string columnname { get; set; }

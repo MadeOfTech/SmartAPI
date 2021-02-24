@@ -25,6 +25,11 @@ namespace MadeOfTech.SmartAPI
         public string APIDb_APIDesignation { get; set; }
 
         /// <summary>
+        /// Json content describing the API. This option override APIDb parameters.
+        /// </summary>
+        public string API_JsonDescription { get; set; }
+
+        /// <summary>
         /// This will use to replace user in connection strings stored in the
         /// APIDb. More precisely, it will replace the {host} field in the
         /// connection string
