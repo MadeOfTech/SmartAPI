@@ -113,6 +113,19 @@ namespace Microsoft.AspNetCore.Builder
                     db.api = api;
                     if (null == db.collections) throw new SmartAPIException("No Collection definition has been found in the db " + db.designation + ".");
 
+                    if (!string.IsNullOrEmpty(options.DataDb_ConnectionHost) && db.connectionstring.Contains("{host}"))
+                    {
+                        db.connectionstring = db.connectionstring.Replace("{host}", options.DataDb_ConnectionHost);
+                    }
+                    if (!string.IsNullOrEmpty(options.DataDb_ConnectionUser) && db.connectionstring.Contains("{user}"))
+                    {
+                        db.connectionstring = db.connectionstring.Replace("{user}", options.DataDb_ConnectionUser);
+                    }
+                    if (!string.IsNullOrEmpty(options.DataDb_ConnectionPwd) && db.connectionstring.Contains("{pwd}"))
+                    {
+                        db.connectionstring = db.connectionstring.Replace("{pwd}", options.DataDb_ConnectionPwd);
+                    }
+
                     foreach (var collection in db.collections)
                     {
                         collection.db = db;
