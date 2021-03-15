@@ -8,10 +8,11 @@
 
 CREATE TABLE db (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    api_id INTEGER NOT NULL,
 	designation VARCHAR(250) NOT NULL,
-	dbtype_id INT NOT NULL,
+	dbtype VARCHAR(30) NOT NULL,
 	connectionstring VARCHAR(250) NOT NULL,
-    CONSTRAINT fk_db__dbtype FOREIGN KEY (api_id) REFERENCES api (id)
+    CONSTRAINT fk_api__id FOREIGN KEY (api_id) REFERENCES api (id)
 );
 
 CREATE TABLE collection (
@@ -26,8 +27,8 @@ CREATE TABLE collection (
     publish_postmember BIT NOT NULL DEFAULT(0),
     publish_putmember BIT NOT NULL DEFAULT(0),
     publish_deletemember BIT NOT NULL DEFAULT(0),
-    CONSTRAINT fk_collection__api FOREIGN KEY (api_id) REFERENCES api (id),
-    CONSTRAINT ux_collection_api_id_collectionname UNIQUE (api_id, collectionname)
+    CONSTRAINT fk_db__id FOREIGN KEY (db_id) REFERENCES db (id),
+    CONSTRAINT ux_collection_api_id_collectionname UNIQUE (db_id, collectionname)
 );
 
 CREATE TABLE attribute (
@@ -47,34 +48,32 @@ CREATE TABLE attribute (
     CONSTRAINT ux_attribute_collection_id_keyindex UNIQUE (collection_id, keyindex)
 );
 
-INSERT INTO dbtype (designation) VALUES ('mysql'),('sqlite');
-
-INSERT INTO db (designation, dbtype_id, connectionstring) SELECT
-'quotesdb', id, 'Data Source=quotesdb.sqlite'
-FROM dbtype
-WHERE designation='sqlite';
-
 INSERT INTO api (designation, description, basepath)
 VALUES ('Quotes API v1', 'API that exposes popular quotes', '/quotesapi/v1');
 
-INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
-SELECT api.id, 'quotes', 'quote', db.id, 'quote', 1, 1, 1, 1, 1
-FROM db, api
-WHERE db.designation = 'quotesdb' AND api.designation = 'Quotes API v1';
+INSERT INTO db (designation, api_id, dbtype, connectionstring) SELECT
+'quotesdb', id, 'mysql', 'Data Source=quotesdb.sqlite'
+FROM api
+WHERE designation='Quotes API v1';
 
-INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
-SELECT api.id, 'authors', 'author', db.id, 'author', 1, 1, 1, 1, 1
-FROM db, api
-WHERE db.designation = 'quotesdb' AND api.designation = 'Quotes API v1';
+INSERT INTO collection (collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
+SELECT 'quotes', 'quote', db.id, 'quote', 1, 1, 1, 1, 1
+FROM db
+WHERE db.designation = 'quotesdb';
 
-INSERT INTO collection (api_id, collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
-SELECT api.id, 'detailed_quotes', 'detailed_quote', db.id, 'v_quote', 1, 1, 0, 0, 0
-FROM db, api
-WHERE db.designation = 'quotesdb' AND api.designation = 'Quotes API v1';
+INSERT INTO collection (collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
+SELECT'authors', 'author', db.id, 'author', 1, 1, 1, 1, 1
+FROM db
+WHERE db.designation = 'quotesdb';
+
+INSERT INTO collection (collectionname, membername, db_id, tablename, publish_getcollection, publish_getmember, publish_postmember, publish_putmember, publish_deletemember)
+SELECT 'detailed_quotes', 'detailed_quote', db.id, 'v_quote', 1, 1, 0, 0, 0
+FROM db
+WHERE db.designation = 'quotesdb';
 
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex)
-SELECT id, 'id', 'id', 'integer', 'int32', 1, 0
+SELECT id, 'id', 'id', 'integer', 'int32', 1, 1
 FROM collection WHERE tablename='quote';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format)
@@ -87,7 +86,7 @@ FROM collection WHERE  tablename='quote';
 
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex)
-SELECT id, 'id', 'id', 'integer', 'int32', 1, 0
+SELECT id, 'id', 'id', 'integer', 'int32', 1, 1
 FROM collection WHERE tablename='author';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type)
@@ -96,7 +95,7 @@ FROM collection WHERE  tablename='author';
 
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, format, autovalue, keyindex, fiqlkeyindex)
-SELECT id, 'id', 'id', 'integer', 'int32', 1, 0, 1
+SELECT id, 'id', 'id', 'integer', 'int32', 1, 1, 1
 FROM collection WHERE tablename='v_quote';
 
 INSERT INTO attribute (collection_id, attributename, columnname, type, fiqlkeyindex)
