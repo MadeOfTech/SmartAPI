@@ -69,10 +69,10 @@ namespace MadeOfTech.SmartAPI
             }
             else
             {
-                var document = httpContext.GetEndpoint().Metadata.GetMetadata<OpenApiDocument>();
-                if (document != null)
+                var documentationMetadata = httpContext.GetEndpoint().Metadata.GetMetadata<SmartAPIDocumentationMetadata>();
+                if (documentationMetadata != null)
                 {
-                    var outputString = document.Serialize(OpenApiSpecVersion.OpenApi2_0, OpenApiFormat.Json);
+                    var outputString = documentationMetadata.Document.Serialize(documentationMetadata.Options.OpenAPIDocument_SpecVersion, OpenApiFormat.Json);
                     httpContext.Response.ContentType = "application/json";
                     await httpContext.Response.WriteAsync(outputString);
                 }

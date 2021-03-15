@@ -27,10 +27,9 @@ namespace MadeOfTech.SmartAPI
         public OpenApiDocument GetDocument()
         {
             var collections = _collections;
-            //var attributes = _attributes;
 
             var swaggerDoc = new OpenApiDocument();
-            swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation, Description = _api.description };
+            swaggerDoc.Info = new OpenApiInfo() { Title = _api.designation, Description = _api.description, Version = _options.Version };
 
             swaggerDoc.Servers.Add(new OpenApiServer() { Description = _api.designation + " server", Url = _options.BasePath });
 
@@ -43,20 +42,17 @@ namespace MadeOfTech.SmartAPI
                     Name = collection.collectionname,
                     Description = collection.description,
                 });
-                
+
                 //var collection_attributes = new List<Attribute>();
                 var collection_keyattributes = new SortedList<int, Data.Models.Attribute>();
 
                 var openApiParameters = new List<OpenApiParameter>();
                 foreach (var attribute in collection.attributes)
                 {
-                    if (attribute.collection_id == collection.id)
+                    if (attribute.keyindex.HasValue)
                     {
-                        if (attribute.keyindex.HasValue)
-                        {
-                            collection_keyattributes.Add(attribute.keyindex.Value, attribute);
-                            openApiParameters.Add(new OpenApiParameter() { Name = attribute.attributename, In = ParameterLocation.Path });
-                        }
+                        collection_keyattributes.Add(attribute.keyindex.Value, attribute);
+                        openApiParameters.Add(new OpenApiParameter() { Name = attribute.attributename, In = ParameterLocation.Path });
                     }
                 }
 

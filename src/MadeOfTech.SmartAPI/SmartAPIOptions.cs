@@ -1,5 +1,6 @@
 ﻿using MadeOfTech.SmartAPI.Data.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi;
 using System;
 using System.Threading.Tasks;
 
@@ -59,6 +60,16 @@ namespace MadeOfTech.SmartAPI
         /// It must be set like this : /foo/bar/.
         /// </remarks>
         public string BasePath { get; set; }
+
+        /// <summary>
+        /// Define the version of the api. This data override the value read in
+        /// the description in database or json file.
+        /// </summary>
+        /// <remarks>
+        /// It must be set like this : 1.0.0.0.
+        /// </remarks>
+        public string Version { get; set; }
+
         /// <summary>
         /// Add authentication to each endpoint that has been mapped for the
         /// middleware. Authentication is based uppon database data.
@@ -113,6 +124,12 @@ namespace MadeOfTech.SmartAPI
         /// publish it to the given path.
         /// </summary>
         public string OpenAPIDocument_Path { get; set; } = null;
+
+        /// <summary>
+        /// Verqsion of the OpenAPI that will be used to generate the documentation.
+        /// By default, it is set to 3.
+        /// </summary>
+        public OpenApiSpecVersion OpenAPIDocument_SpecVersion { get; set; } = OpenApiSpecVersion.OpenApi3_0;
 
         /// <summary>
         /// If set, an attribute will be inserted inside every requests made
