@@ -1,0 +1,30 @@
+﻿{
+  "designation": "CRUD API v1",
+  "description": "This API exposes ressource that exposes all data type.",
+  "basepath": "/crudtests",
+  "dbs": [
+    {
+      "designation": "cruddb",
+      "dbtype": "sqlite",
+      "connectionstring": "Data Source=cruddb.sqlite",
+      "collections": [
+        {
+          "collectionname": "testentities",
+          "membername": "testentity",
+          "tablename": "testentity_table",
+          "description": "A testentity is an entity that we will be able to torture.",
+          "publish_getcollection": 1,
+          "publish_getmember": 1,
+          "publish_postmember": 1,
+          "publish_putmember": 1,
+          "publish_deletemember": 1,
+          "attributes": [
+            { "attributename": "id", "columnname": "id", "type": "integer", "format": "int32", "autovalue": 1, "keyindex": 1 },
+            { "attributename": "designation", "columnname": "designation", "type": "string"  },
+            { "attributename": "ts", "columnname": "ts", "type": "string", "format": "date-time" }
+          ]
+        }
+      ]
+    }
+  ]
+}

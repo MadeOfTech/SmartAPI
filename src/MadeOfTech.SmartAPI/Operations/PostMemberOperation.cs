@@ -19,7 +19,12 @@ namespace MadeOfTech.SmartAPI.Operations
             context.Response.StatusCode = 201;
 
             var httpRequestFeature = context.Features.Get<IHttpRequestFeature>();
-            context.Response.Headers["Location"] = httpRequestFeature.RawTarget + "/" + id;
+            var baseUrl = httpRequestFeature.RawTarget;
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                baseUrl = httpRequestFeature.PathBase + httpRequestFeature.Path;
+            }
+            context.Response.Headers["Location"] = baseUrl + "/" + id;
 
             var endpointMetadata = context.GetEndpoint().Metadata.GetMetadata<SmartAPIEndpointMetadata>();
 
