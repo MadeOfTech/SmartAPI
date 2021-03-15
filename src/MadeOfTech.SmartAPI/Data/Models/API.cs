@@ -8,6 +8,7 @@ namespace MadeOfTech.SmartAPI.Data.Models
         public string designation { get; set; }
         public string description { get; set; }
         public string basepath { get; set; }
+        public string version { get; set; }
         public IEnumerable<Db> dbs { get; set; }
         public IEnumerable<Collection> collections
         {

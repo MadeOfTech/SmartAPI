@@ -156,7 +156,9 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             foreach (var attribute in _collection.attributes)
             {
                 string value = null;
-                if (attribute.keyindex.HasValue) value = keys[attribute.keyindex.Value];
+
+                // Beware that key index is 1-based while keys array is 0-based.
+                if (attribute.keyindex.HasValue) value = keys[attribute.keyindex.Value - 1];
                 else value = newRow[attribute.attributename].ToString();
 
                 if (attribute.autovalue)
@@ -318,18 +320,20 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             foreach (var keyAttribute in keyAttributes)
             {
                 object typedValue = null;
+                // Beware that key index is 1-based while keys array is 0-based.
+                var keyValue = keys[keyAttribute.keyindex.Value - 1];
                 switch (keyAttribute.type)
                 {
                     case "integer":
                     case "number":
                     case "serial":
-                        typedValue = long.Parse(keys[keyAttribute.keyindex.Value]);
+                        typedValue = long.Parse(keyValue);
                         break;
                     case "string":
-                        typedValue = keys[keyAttribute.keyindex.Value];
+                        typedValue = keyValue;
                         break;
                     case "datetime":
-                        typedValue = keys[keyAttribute.keyindex.Value].UnISO8601();
+                        typedValue = keyValue.UnISO8601();
                         break;
                     default:
                         return (null, null);

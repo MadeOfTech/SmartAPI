@@ -9,6 +9,9 @@ using System.Linq;
 using Attribute = MadeOfTech.SmartAPI.Data.Models.Attribute;
 using MadeOfTech.SmartAPI.Exceptions;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -25,6 +28,8 @@ namespace Microsoft.AspNetCore.Builder
             this IEndpointRouteBuilder endpoints,
             Action<SmartAPIOptions> setupAction = null)
         {
+            var logger = endpoints.ServiceProvider.GetService<ILogger<SmartAPIMiddleware>>();
+
             SmartAPIOptions options = new SmartAPIOptions();
             if (setupAction != null) setupAction.Invoke(options);
 
@@ -44,12 +49,11 @@ namespace Microsoft.AspNetCore.Builder
 
                     var dbDataAdapter = new DbDataAdapter(dbConnection);
                     var dbs = dbDataAdapter.getAll(options.APIDb_APIDesignation);
-                    if (dbs.Count() <= 1)
+                    if (dbs.Count() < 1)
                     {
                         throw new SmartAPIException("No Db definition has been found in the database.");
                     }
                     api.dbs = dbs.ToArray();
-                    
 
                     var collectionDataAdapter = new CollectionDataAdapter(dbConnection);
                     var collections = collectionDataAdapter.getAll(options.APIDb_APIDesignation);
@@ -150,6 +154,11 @@ namespace Microsoft.AspNetCore.Builder
             }
             options.BasePath = basePath;
 
+            if (string.IsNullOrEmpty(options.Version) && !string.IsNullOrEmpty(api.version))
+            {
+                options.Version = api.version;
+            }
+
             var pipeline = endpoints
                 .CreateApplicationBuilder()
                 .UseSmartAPI()
@@ -159,21 +168,51 @@ namespace Microsoft.AspNetCore.Builder
             {
                 var generator = new SmartAPIDocumentGenerator(options, api);
                 var document = generator.GetDocument();
-                endpoints.MapGet(options.BasePath + options.OpenAPIDocument_Path, pipeline).WithMetadata(document);
+                endpoints.MapGet(options.BasePath + options.OpenAPIDocument_Path, pipeline).WithSmartAPIDocumentationMetadata(options, document);
+                logger.LogInformation("Swagger document available at : " + options.BasePath + options.OpenAPIDocument_Path);
             }
 
             foreach (var collection in api.collections)
             {
+                VerifyCollectionDefinition(collection);
+
                 if (collection.attributes.Count() > 0)
                 {
-                    if (collection.publish_getcollection) endpoints.MapGet(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetCollection, collection).WithAuthentication(options, "get_" + collection.collectionname).WithCors(options);
-                    if (collection.publish_getmember) endpoints.MapGet(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetMember, collection).WithAuthentication(options, "get_" + collection.membername).WithCors(options);
+                    if (collection.publish_getcollection)
+                    {
+                        endpoints.MapGet(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetCollection, collection).WithAuthentication(options, "get_" + collection.collectionname).WithCors(options);
+                        logger.LogInformation("Collection selection available at GET : " + basePath + collection.collectionname);
+                    }
 
-                    if (collection.publish_postmember) endpoints.MapPost(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PostMember, collection).WithAuthentication(options, "post_" + collection.membername).WithCors(options);
-                    if (collection.publish_putmember) endpoints.MapPut(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PutMember, collection).WithAuthentication(options, "put_" + collection.membername).WithCors(options);
-                    if (collection.publish_deletemember) endpoints.MapDelete(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.DeleteMember, collection).WithAuthentication(options, "delete_" + collection.membername).WithCors(options);
+                    if (collection.publish_getmember)
+                    {
+                        endpoints.MapGet(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.GetMember, collection).WithAuthentication(options, "get_" + collection.membername).WithCors(options);
+                        logger.LogInformation("Member selection available at GET : " + basePath + collection.collectionname + "/{id}");
+                    }
+
+                    if (collection.publish_postmember)
+                    {
+                        endpoints.MapPost(basePath + collection.collectionname, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PostMember, collection).WithAuthentication(options, "post_" + collection.membername).WithCors(options);
+                        logger.LogInformation("Member creation available at POST : " + basePath + collection.collectionname);
+                    }
+
+                    if (collection.publish_putmember)
+                    {
+                        endpoints.MapPut(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PutMember, collection).WithAuthentication(options, "put_" + collection.membername).WithCors(options);
+                        logger.LogInformation("Member upsert available at PUT : " + basePath + collection.collectionname + "/{id}");
+                    }
+
+                    if (collection.publish_deletemember)
+                    {
+                        endpoints.MapDelete(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.DeleteMember, collection).WithAuthentication(options, "delete_" + collection.membername).WithCors(options);
+                        logger.LogInformation("Member deletion available at DELETE : " + basePath + collection.collectionname + "/{id}");
+                    }
 
                     //endpoints.MapGet(collection.url + "/{id}/{attribute_name}", async context => { await getAttributeRouter.HandlerAsync(context, collection, collection_attributes); });
+                }
+                else
+                {
+                    logger.LogWarning("No endpoint available for collection " + collection.collectionname + " : no attribute has been found.");
                 }
             }
 
@@ -183,6 +222,12 @@ namespace Microsoft.AspNetCore.Builder
         private static TBuilder WithSmartAPIMetadata<TBuilder>(this TBuilder builder, SmartAPIOptions options, SmartAPIEndpointMetadata.EndpointOperation operation, Collection collection) where TBuilder : IEndpointConventionBuilder
         {
             builder.WithMetadata(new SmartAPIEndpointMetadata(options, operation, collection));
+            return builder;
+        }
+
+        private static TBuilder WithSmartAPIDocumentationMetadata<TBuilder>(this TBuilder builder, SmartAPIOptions options, OpenApiDocument document) where TBuilder : IEndpointConventionBuilder
+        {
+            builder.WithMetadata(new SmartAPIDocumentationMetadata(options, document));
             return builder;
         }
 
@@ -220,6 +265,27 @@ namespace Microsoft.AspNetCore.Builder
             }
 
             return builder;
+        }
+
+        private static void VerifyCollectionDefinition(Collection collection)
+        {
+            var keyAttributes = collection.attributes.Where(a => { return a.keyindex.HasValue; }).OrderBy(a => { return a.keyindex.Value; });
+
+            int keyIndex = 1;
+            foreach (var attribute in keyAttributes)
+            {
+                if (attribute.keyindex.Value != keyIndex) throw new SmartAPIException("The key index of attribute " + attribute.attributename + " is not correctly defined for collection " + collection.collectionname + ". Indexes are 1-based and must follow one by one.");
+                keyIndex++;
+            }
+
+            var fiqlAttributes = collection.attributes.Where(a => { return a.fiqlkeyindex.HasValue; }).OrderBy(a => { return a.fiqlkeyindex.Value; });
+
+            int fiqlIndex = 1;
+            foreach (var attribute in fiqlAttributes)
+            {
+                if (attribute.fiqlkeyindex.Value != fiqlIndex) throw new SmartAPIException("The fiql index of attribute " + attribute.attributename + " is not correctly defined for collection " + collection.collectionname + ". Indexes are 1-based and must follow one by one.");
+                fiqlIndex++;
+            }
         }
     }
 }
