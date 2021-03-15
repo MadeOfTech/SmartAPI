@@ -159,13 +159,13 @@ namespace MadeOfTech.SmartAPI.Operations
         {
             if ((InputObjectType != ObjectType.Void) && (context.Request.ContentLength > 0))
             {
-                if (context.Request.ContentType == "application/json" && context.Request.ContentLength > 0)
+                if (context.Request.ContentType.Contains("application/json") && context.Request.ContentLength > 0)
                 {
                     byte[] inputBytes = new byte[context.Request.ContentLength.Value];
                     _ = await context.Request.Body.ReadAsync(inputBytes, 0, (int)context.Request.ContentLength.Value);
                     return JsonConvert.DeserializeObject(System.Text.UTF8Encoding.UTF8.GetString(inputBytes));
                 }
-                else if (context.Request.ContentType == "application/xml" && context.Request.ContentLength > 0)
+                else if (context.Request.ContentType.Contains("application/xml") && context.Request.ContentLength > 0)
                 {
                     byte[] inputBytes = new byte[context.Request.ContentLength.Value];
                     _ = await context.Request.Body.ReadAsync(inputBytes, 0, (int)context.Request.ContentLength.Value);
