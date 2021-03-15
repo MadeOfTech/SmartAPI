@@ -14,6 +14,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 @"
 SELECT
 	collection.id,
+	collection.db_id,
 	collection.collectionname,
     collection.membername,
 	collection.tablename,

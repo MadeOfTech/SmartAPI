@@ -13,6 +13,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 		private static string _getAllSqlStatement =
 @"
 SELECT
+	db.id,
 	db.designation,
 	db.dbtype,
 	db.connectionstring

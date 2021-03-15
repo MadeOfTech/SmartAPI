@@ -27,7 +27,8 @@ SELECT
 FROM
 	attribute INNER JOIN
 	collection ON attribute.collection_id=collection.id INNER JOIN
-	api ON collection.api_id=api.id
+	db ON collection.db_id=db.id INNER JOIN
+	api ON db.api_id=api.id
 WHERE
 	api.designation = @api_designation
 ORDER BY
