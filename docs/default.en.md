@@ -1,6 +1,9 @@
-# SmartAPI
+---
+title: 'SmartAPI'
+template: item
+---
 
-## Have you ever wondered?
+# Have you ever wondered?
 
 Have you ever thought to yourself that the code of all APIs is furiously alike?
 Whether you spend more time copying and pasting to transform HTTP queries
@@ -9,9 +12,9 @@ of the OpenAPI documentation in a different way?
 
 If the answer to each of these questions is yes, the following should interest you!
 
-## Introduction
+# Introduction
 
-### Purpose
+## Purpose
 
 This project is a middleware helping people to build automatically, a complete
 RESTful API and its documentation, based upon database structure. This way,
@@ -19,7 +22,7 @@ CRUD method will be generated to map operation to database command. This approac
 offer consistency in API developpement, eases the maintenance and evolution and
 moreover, decreases by a big factor, bugs.
 
-### Why ?
+## Why ?
 
 It's been a few years now that in the different companies where I worked, we
 published tons af API. From my point of view, we've never made any effort to
@@ -48,9 +51,9 @@ code, effort, nor complexity.
 
 And, i did it ? You want to know how ? Let's continue !
 
-## Technical overview
+# Technical overview
 
-### Technical considerations about REST
+## Technical considerations about REST
 
 Considering Wikipedia definition of REST, there's an
 [historical method semantics]
@@ -79,7 +82,7 @@ member resource except for GET to retreive a complete collection. Moreover, PATC
 has been removed, due to the complexity of its usage (but sure, it will be
 implemented one day).
 
-### Swagger Datatypes
+## Swagger Datatypes
 
 Known swagger types are the following :
 
@@ -138,7 +141,7 @@ date-time input format are the following :
 
 All date time all internally manipulated as `DateTimeKind.Utc`.
 
-### Generated SQL requests
+## Generated SQL requests
 
 As far as collections are a mapping of a table or a view, generated SQL requests
 are very simple and then, efficient... except for collections request.
@@ -147,7 +150,7 @@ Attention must be paid to the way you'll communicate with your clients. If expos
 tends to be huge, a good idea would be to expose views so that data is keept
 reasonnably small and request efficient regarding to the keys.
 
-### Share storage, not data
+## Share storage, not data
 
 Considering SaaS development, major stakes are performances and tenants isolations.
 The way i've done this, till the beginning of my carrer, was to inject in all of
@@ -220,7 +223,7 @@ way. This is the reason why this value is systematically evaluated. Every
 developper will have the possibility to choose the best way to proceed to this
 evaluation.
 
-### A small arrangement with the standard
+## A small arrangement with the standard
 
 Among the options, there is `Upsert_FillBodyWithMember`.
 If set to true, the API will behave a little differently from the
@@ -228,7 +231,7 @@ standard for upsert operations ie. POST and PUT. Indeed, in addition
 to returning the recommended headers it will fill the body with member
 representation. This behaviour will be reflected in the swagger documentation.
 
-### Trigger_AfterOperation
+## Trigger_AfterOperation
 
 This parameters allows you to trig actions based upon operation successfully
 done. This is an example, taken from QuotesAPI :
@@ -252,7 +255,7 @@ The parameters are the following :
 * `input` is the object the caller sent into the body ;
 * `keys` is a string array containing key values, enumerated in the order decribed into the database.
 
-## Samples
+# Samples
 
 2 samples are delivered with this solution : QuotesAPI and NotesAPI. Both of them
 are designed to help developper to understand the way SmartAPI works. To facilitate
@@ -261,7 +264,7 @@ understanding, it's easier to use smaples in the following order :
 * QuotesAPI
 * NotesAPI
 
-### QuotesAPI
+## QuotesAPI
 
 This sample API is a open API to world in read mode, but is private for modifications.
 To access data in modification, you'll have to authenticate as `admin`, with the
@@ -278,7 +281,7 @@ this way, it's easy to search for quotes containing, for example, the word peppe
 This way, beware to performances (indexation) and volume of data (which can be
 huge).
 
-### NotesAPI
+## NotesAPI
 
 This sample API is user centric and exposed data that are stored in a common DB. The user
 has to login to use API and to access to ressources : folders and notes. Basically,
@@ -300,17 +303,17 @@ by `BasicAuthenticationHandler` that,moreover, complete claims for the principal
 the `InjectAttribute_ValueEvaluator` will just have to look for this claim to
 allow SmartAPI to complete injection.
 
-## Author
+# Author
 
 * **Fabien Philippe** - *Initial work* - [GitHub](https://github.com/fphilippe), [LinkedIn](https://www.linkedin.com/in/fabienphilippe/)
 
-## Special thanks
+# Special thanks
 
 I warmly thank [API-K](https://www.api-k.com), and more particularly 
 [Pascal Roux](https://www.linkedin.com/in/pascal-roux-6528a118) for its trust and
 for the time he left me to complete this project!
 
-## License
+# License
 
 Copyright 2020 Fabien Philippe
 

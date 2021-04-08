@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuotesAPI", "samples\Quotes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{02E5AA89-25E9-47F5-9598-902A34F9B215}"
 	ProjectSection(SolutionItems) = preProject
+		docs\default.en.md = docs\default.en.md
+		docs\default.fr.md = docs\default.fr.md
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -22,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{EE75A1C7-C4C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1E934AD4-DBC6-4396-A6C6-599D8A151A56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MadeOfTech.SmartAPI.UnitTests", "tests\MadeOfTech.SmartAPI.UnitTests\MadeOfTech.SmartAPI.UnitTests.csproj", "{364FA9E2-E789-45B1-BEBD-83EF2B2C0392}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MadeOfTech.SmartAPI.UnitTests", "tests\MadeOfTech.SmartAPI.UnitTests\MadeOfTech.SmartAPI.UnitTests.csproj", "{364FA9E2-E789-45B1-BEBD-83EF2B2C0392}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
