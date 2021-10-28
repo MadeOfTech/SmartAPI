@@ -116,7 +116,6 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                 }
                 else if (attribute.type == "string" && attribute.format == "binary")
                 {
-                    Console.WriteLine(newRow[attribute.attributename]);
                     if (newRow[attribute.attributename].ToString().StartsWith("0x"))
                     {
                         string value = newRow[attribute.attributename].ToString();
@@ -124,9 +123,9 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                         parameters.Add(attribute.attributename, binaryValue);
                     }
                 }
-                else if (attribute.type == "integer" || attribute.type == "number")
+                else if (attribute.type == "integer")
                 {
-                    parameters.Add(attribute.attributename, (int?)newRow[attribute.attributename]);
+                    parameters.Add(attribute.attributename, String.IsNullOrEmpty(newRow[attribute.attributename].ToString()) ? (long?)null : long.Parse(newRow[attribute.attributename].ToString()));
                 }
                 else
                 {
@@ -159,34 +158,44 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
                 // Beware that key index is 1-based while keys array is 0-based.
                 if (attribute.keyindex.HasValue) value = keys[attribute.keyindex.Value - 1];
-                else value = newRow[attribute.attributename].ToString();
 
-                if (attribute.autovalue)
-                {
-                    // When PUT is called, the semantic means only these actions :
-                    // - update a member which url is known ;
-                    // - add a member which url is known.
-                    // This last condition supposes that no auto_increment column
-                    // is implied into insertion.
-                    upsert = false;
-                    parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
-                }
-
-                if (attribute.type == "string" && attribute.format == "binary")
-                {
-                    if (value.ToString().StartsWith("0x"))
-                    {
-                        var binaryValue = newRow[attribute.attributename].ToString().UnHex();
-                        parameters.Add(attribute.attributename, binaryValue);
-                    }
-                }
-                else if (attribute.type == "integer")
-                {
-                    parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
-                }
+                if (newRow[attribute.attributename].Value == null) parameters.Add(attribute.attributename, null);
                 else
                 {
-                    parameters.Add(attribute.attributename, value);
+                    value = newRow[attribute.attributename].ToString();
+
+                    if (attribute.autovalue)
+                    {
+                        // When PUT is called, the semantic means only these actions :
+                        // - update a member which url is known ;
+                        // - add a member which url is known.
+                        // This last condition supposes that no auto_increment column
+                        // is implied into insertion.
+                        upsert = false;
+                        parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
+                    }
+
+                    if (attribute.type == "string" && attribute.format == "binary")
+                    {
+                        if (String.IsNullOrEmpty(value))
+                        {
+                            parameters.Add(attribute.attributename, (byte[])null);
+                        }
+                        else if (value.ToString().StartsWith("0x"))
+                        {
+                            string stringValue = newRow[attribute.attributename].ToString();
+                            var binaryValue = stringValue.UnHex();
+                            parameters.Add(attribute.attributename, binaryValue);
+                        }
+                    }
+                    else if (attribute.type == "integer")
+                    {
+                        parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
+                    }
+                    else
+                    {
+                        parameters.Add(attribute.attributename, value);
+                    }
                 }
             }
 
@@ -295,7 +304,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             {
                 if (attribute.keyindex.HasValue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
-                attributesSqlStatement += $"{attribute.attributename}=@{attribute.attributename}";
+                attributesSqlStatement += $"{attribute.columnname}=@{attribute.attributename}";
             }
             return attributesSqlStatement;
         }
