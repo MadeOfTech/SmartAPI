@@ -97,7 +97,7 @@ namespace MadeOfTech.SmartAPI
 
                 response.Content.Add("application/json", type);
                 response.Content.Add("application/xml", type);
-                responses.Add("204", response);
+                responses.Add("200", response);
 
                 return responses;
             }

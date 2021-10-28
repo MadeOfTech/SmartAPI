@@ -19,7 +19,7 @@ namespace MadeOfTech.SmartAPI.Operations
             {
                 case TableDataAdapter.UpsertResult.NothingChanged: context.Response.StatusCode = 304; break;
                 case TableDataAdapter.UpsertResult.OneRowInserted: context.Response.StatusCode = 201; break;
-                case TableDataAdapter.UpsertResult.OneRowUpdated: context.Response.StatusCode = 204; break;
+                case TableDataAdapter.UpsertResult.OneRowUpdated: context.Response.StatusCode = 200; break;
             }
 
             var endpointMetadata = context.GetEndpoint().Metadata.GetMetadata<SmartAPIEndpointMetadata>();
