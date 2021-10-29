@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using MadeOfTech.SmartAPI.Data.Models;
 using MadeOfTech.SmartAPI.Db;
+using MadeOfTech.SmartAPI.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -87,7 +88,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                 return (await _dbConnection.QueryAsync(querySqlStatement, whereClause.sqlParameters)).ToList();
             }
         }
-        
+
         public async Task<List<dynamic>> SelectAsync(string[] keys)
         {
             if (null == keys) throw new ArgumentNullException("keys", "keys can't be null");
@@ -96,11 +97,11 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             string querySqlStatement = $"SELECT {attributesSqlStatement} FROM {_collection.tablename} WHERE {whereClause.whereSqlStatement};";
             return (await _dbConnection.QueryAsync(querySqlStatement, whereClause.sqlParameters)).ToList();
         }
-        
+
         public async Task<dynamic> InsertAsync(dynamic newRow)
         {
-            var attributesSqlStatement = ComputeInsertedAttributes();
-            var attributesValuesSqlStatement = ComputeInsertedAttributesValues();
+            var attributesSqlStatement = ComputeInsertedAttributes(null);
+            var attributesValuesSqlStatement = ComputeInsertedAttributesValues(null);
             string querySqlStatement = $"INSERT INTO {_collection.tablename} ({attributesSqlStatement}) VALUES ({attributesValuesSqlStatement});";
             querySqlStatement += $"SELECT " + _dbConnection.LastInsertedIdClause() + " AS serial;";
 
@@ -114,7 +115,8 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                 {
                     parameters.Add(attribute.attributename, null);
                 }
-                else if (attribute.type == "string" && attribute.format == "binary")
+                else parameters.Add(attribute.attributename, GetAttributeValue(attribute, newRow[attribute.attributename]));
+                /*else if (attribute.type == "string" && attribute.format == "binary")
                 {
                     if (newRow[attribute.attributename].ToString().StartsWith("0x"))
                     {
@@ -130,7 +132,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                 else
                 {
                     parameters.Add(attribute.attributename, newRow[attribute.attributename].ToString());
-                }
+                }*/
             }
 
             if (!String.IsNullOrEmpty(_injectedAttributeName))
@@ -158,45 +160,23 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
                 // Beware that key index is 1-based while keys array is 0-based.
                 if (attribute.keyindex.HasValue) value = keys[attribute.keyindex.Value - 1];
+                else if (!newRow.ContainsKey(attribute.attributename)) continue;
+                else if (newRow[attribute.attributename].Value == null) { parameters.Add(attribute.attributename, null); continue; }
+                else value = newRow[attribute.attributename].Value.ToString();
 
-                if (newRow[attribute.attributename].Value == null) parameters.Add(attribute.attributename, null);
-                else
+                if (attribute.autovalue)
                 {
-                    value = newRow[attribute.attributename].ToString();
-
-                    if (attribute.autovalue)
-                    {
-                        // When PUT is called, the semantic means only these actions :
-                        // - update a member which url is known ;
-                        // - add a member which url is known.
-                        // This last condition supposes that no auto_increment column
-                        // is implied into insertion.
-                        upsert = false;
-                        parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
-                    }
-
-                    if (attribute.type == "string" && attribute.format == "binary")
-                    {
-                        if (String.IsNullOrEmpty(value))
-                        {
-                            parameters.Add(attribute.attributename, (byte[])null);
-                        }
-                        else if (value.ToString().StartsWith("0x"))
-                        {
-                            string stringValue = newRow[attribute.attributename].ToString();
-                            var binaryValue = stringValue.UnHex();
-                            parameters.Add(attribute.attributename, binaryValue);
-                        }
-                    }
-                    else if (attribute.type == "integer")
-                    {
-                        parameters.Add(attribute.attributename, String.IsNullOrEmpty(value) ? (long?)null : long.Parse(value));
-                    }
-                    else
-                    {
-                        parameters.Add(attribute.attributename, value);
-                    }
+                    // When PUT is called, the semantic means only these actions :
+                    // - update a member which url is known ;
+                    // - add a member which url is known.
+                    // This last condition supposes that no auto_increment column
+                    // is implied into insertion. So, if no autovalue exists, we
+                    // will give a try to upsert, else we only try to update.
+                    // 
+                    upsert = false;
                 }
+
+                parameters.Add(attribute.attributename, GetAttributeValue(attribute, value));
             }
 
             if (!String.IsNullOrEmpty(_injectedAttributeName))
@@ -207,9 +187,9 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             string querySqlStatement = "";
             if (upsert)
             {
-                var attributesSqlStatement = ComputeInsertedAttributes();
-                var insertedattributesValuesSqlStatement = ComputeInsertedAttributesValues();
-                var updatedAttributesValuesSqlStatement = ComputeUpdatedAttributesValues();
+                var attributesSqlStatement = ComputeInsertedAttributes(parameters);
+                var insertedattributesValuesSqlStatement = ComputeInsertedAttributesValues(parameters);
+                var updatedAttributesValuesSqlStatement = ComputeUpdatedAttributesValues(parameters);
 
                 querySqlStatement = $"INSERT INTO {_collection.tablename} ({attributesSqlStatement}) VALUES ({insertedattributesValuesSqlStatement})";
                 querySqlStatement += $" ON DUPLICATE KEY UPDATE {updatedAttributesValuesSqlStatement};";
@@ -221,7 +201,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             }
             else
             {
-                var updatedAttributesValuesSqlStatement = ComputeUpdatedAttributesValues();
+                var updatedAttributesValuesSqlStatement = ComputeUpdatedAttributesValues(parameters);
                 var whereClause = ComputeWhereClause(keys);
 
                 querySqlStatement = $"UPDATE {_collection.tablename} SET {updatedAttributesValuesSqlStatement} WHERE {whereClause.whereSqlStatement}";
@@ -230,6 +210,23 @@ namespace MadeOfTech.SmartAPI.DataAdapters
                 if (0 == value) return UpsertResult.NothingChanged;
                 else return UpsertResult.OneRowUpdated;
             }
+        }
+
+        /// <summary>
+        /// This method parse all possible type of attribute.
+        /// </summary>
+        /// <remarks>
+        /// Please note that the first thing that this method try to do is to
+        /// transform the given value into a string. The reason for that is that
+        /// we want to be able to work on route derived key the same way than on
+        /// body values.
+        /// </remarks>
+        /// <param name="attribute">description of the attribute we wan't to parse the value</param>
+        /// <param name="value">raw value of the attribute</param>
+        /// <returns></returns>
+        private object GetAttributeValue(Data.Models.Attribute attribute, dynamic value)
+        {
+            return attribute.ParseAttributeValue(value);
         }
 
         public async Task DeleteASync(string[] keys)
@@ -255,7 +252,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             return attributesSqlStatement;
         }
 
-        private string ComputeInsertedAttributes()
+        private string ComputeInsertedAttributes(DynamicParameters parameters)
         {
             if (null == _collection.attributes) return null;
             if (0 == _collection.attributes.Count()) return null;
@@ -263,6 +260,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             var attributesSqlStatement = "";
             foreach (var attribute in _collection.attributes)
             {
+                if (null != parameters && !parameters.ParameterNames.Contains(attribute.attributename)) continue;
                 if (attribute.autovalue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
                 attributesSqlStatement += $"{attribute.columnname}";
@@ -275,7 +273,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             return attributesSqlStatement;
         }
 
-        private string ComputeInsertedAttributesValues()
+        private string ComputeInsertedAttributesValues(DynamicParameters parameters)
         {
             if (null == _collection.attributes) return null;
             if (0 == _collection.attributes.Count()) return null;
@@ -283,6 +281,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             var attributesSqlStatement = "";
             foreach (var attribute in _collection.attributes)
             {
+                if (null != parameters && !parameters.ParameterNames.Contains(attribute.attributename)) continue;
                 if (attribute.autovalue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
                 attributesSqlStatement += $"@{attribute.attributename}";
@@ -294,7 +293,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             }
             return attributesSqlStatement;
         }
-        private string ComputeUpdatedAttributesValues()
+        private string ComputeUpdatedAttributesValues(DynamicParameters parameters)
         {
             if (null == _collection.attributes) return null;
             if (0 == _collection.attributes.Count()) return null;
@@ -302,6 +301,7 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             var attributesSqlStatement = "";
             foreach (var attribute in _collection.attributes)
             {
+                if (null != parameters && !parameters.ParameterNames.Contains(attribute.attributename)) continue;
                 if (attribute.keyindex.HasValue) continue;
                 if (!string.IsNullOrEmpty(attributesSqlStatement)) attributesSqlStatement += ",";
                 attributesSqlStatement += $"{attribute.columnname}=@{attribute.attributename}";
@@ -328,25 +328,9 @@ namespace MadeOfTech.SmartAPI.DataAdapters
             var sqlParameters = new ExpandoObject() as IDictionary<string, Object>;
             foreach (var keyAttribute in keyAttributes)
             {
-                object typedValue = null;
                 // Beware that key index is 1-based while keys array is 0-based.
                 var keyValue = keys[keyAttribute.keyindex.Value - 1];
-                switch (keyAttribute.type)
-                {
-                    case "integer":
-                    case "number":
-                    case "serial":
-                        typedValue = long.Parse(keyValue);
-                        break;
-                    case "string":
-                        typedValue = keyValue;
-                        break;
-                    case "datetime":
-                        typedValue = keyValue.UnISO8601();
-                        break;
-                    default:
-                        return (null, null);
-                }
+                var typedValue = GetAttributeValue(keyAttribute, keyValue);
 
                 if (whereSqlStatement.Length > 1) whereSqlStatement += " AND ";
                 whereSqlStatement += $"{keyAttribute.columnname}=@{keyAttribute.attributename}";

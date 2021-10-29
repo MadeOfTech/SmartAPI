@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MadeOfTech.SmartAPI.Operations
 {
-    public class DeleteMemberOperation : OperationBase
+    public class DeleteMemberOperation : CRUDOperationBase
     {
         protected override async Task<OperationOutput> InternalHandlerASync(HttpContext context, object inputObject, TableDataAdapter tableDataAdapter)
         {

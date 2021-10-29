@@ -87,7 +87,7 @@ namespace MadeOfTech.SmartAPI.FIQL
                     }
                 }
             }
-            else if (attribute.type == "string" && attribute.format == "binary")
+            else if (attribute.type == "string" && attribute.format == "0xbyte")
             {
                 try
                 {
@@ -100,10 +100,42 @@ namespace MadeOfTech.SmartAPI.FIQL
                 }
                 catch
                 {
-                    throw new FIQLException("Value for attribute " + _selector + " is not a date-time : " + _argument + ".");
+                    throw new FIQLException("Value for attribute " + _selector + " is not a 0xbyte : " + _argument + ".");
+                }
+            }
+            else if (attribute.type == "string" && attribute.format == "byte")
+            {
+                try
+                {
+                    var value = Convert.FromBase64String(_argument);
+                    return (SQLGetGenericOperator(), value);
+                }
+                catch (FIQLException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    throw new FIQLException("Value for attribute " + _selector + " is not a byte : " + _argument + ".");
                 }
             }
             else if (attribute.type == "string" && attribute.format == "date-time")
+            {
+                try
+                {
+                    var value = _argument.UnISO8601();
+                    return (SQLGetGenericOperator(), value);
+                }
+                catch (FIQLException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    throw new FIQLException("Value for attribute " + _selector + " is not a date-time : " + _argument + ".");
+                }
+            }
+            else if (attribute.type == "string" && attribute.format == "date")
             {
                 try
                 {

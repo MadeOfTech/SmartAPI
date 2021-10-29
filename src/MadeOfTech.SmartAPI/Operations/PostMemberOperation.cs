@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MadeOfTech.SmartAPI.Operations
 {
-    public class PostMemberOperation : OperationBase
+    public class PostMemberOperation : CRUDOperationBase
     {
         public PostMemberOperation() : base(ObjectType.Member, ObjectType.Member) { }
         protected override async Task<OperationOutput> InternalHandlerASync(HttpContext context, object inputObject, TableDataAdapter tableDataAdapter)
