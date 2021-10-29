@@ -13,10 +13,12 @@ namespace System
     "yyyyMMddTHHmmssfffzzz",
     "yyyyMMddTHHmmssfffzz",
     "yyyyMMddTHHmmssfffZ",
+    "yyyyMMddTHHmmssfffffffZ",
     // Extended formats
     "yyyy-MM-ddTHH:mm:ss.fffzzz",
     "yyyy-MM-ddTHH:mm:ss.fffzz",
     "yyyy-MM-ddTHH:mm:ss.fffZ",
+    "yyyy-MM-ddTHH:mm:ss.fffffffZ",
     // Basic formats
     "yyyyMMddTHHmmsszzz",
     "yyyyMMddTHHmmsszz",
@@ -40,7 +42,7 @@ namespace System
 
         public static string ISO8601(this DateTime dt)
         {
-            return dt.ToString("yyyyMMddTHHmmssfffZ", CultureInfo.InvariantCulture);
+            return dt.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
         }
 }
 }
