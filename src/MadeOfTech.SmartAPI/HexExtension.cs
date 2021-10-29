@@ -23,9 +23,9 @@ namespace System
                          .ToArray();
         }
 
-        public static string Hex(this byte[] array)
+        public static string Hex(this IEnumerable<byte> array)
         {
-            return "0x" + BitConverter.ToString(array).Replace("-", string.Empty);
+            return "0x" + BitConverter.ToString(array.ToArray()).Replace("-", string.Empty);
         }
 }
 }
