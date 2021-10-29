@@ -15,7 +15,7 @@ namespace MadeOfTech.SmartAPI
     public class SmartAPIMiddleware
     {
         private readonly RequestDelegate _next;
-
+        private static string _smartAPIMiddlewareVersion = System.Reflection.Assembly.GetAssembly(typeof(SmartAPIMiddleware)).GetName().Version.ToString();
         public SmartAPIMiddleware(RequestDelegate next)
         {
             _next = next;
@@ -45,6 +45,10 @@ namespace MadeOfTech.SmartAPI
                         operation = new PutMemberOperation();
                         break;
 
+                    case SmartAPIEndpointMetadata.EndpointOperation.PatchMember:
+                        operation = new PatchMemberOperation();
+                        break;
+
                     case SmartAPIEndpointMetadata.EndpointOperation.DeleteMember:
                         operation = new DeleteMemberOperation();
                         break;
@@ -52,7 +56,7 @@ namespace MadeOfTech.SmartAPI
 
                 if (null != operation)
                 {
-                    if (endpointMetadata.Options.FillHeaderXPoweredBy) httpContext.Response.Headers.Add("X-Powered-By", "SmartAPI - Visit https://smartapi.madeoftech.com");
+                    if (endpointMetadata.Options.FillHeaderXPoweredBy) httpContext.Response.Headers.Add("X-Powered-By", "SmartAPI (" + _smartAPIMiddlewareVersion + ")- Visit https://smartapi.madeoftech.com");
                     string InjectAttribute_Name = null;
                     object InjectAttribute_Value = null;
                     if (!string.IsNullOrEmpty(endpointMetadata.Options.InjectAttribute_Name) && (endpointMetadata.Options.InjectAttribute_ValueEvaluator != null))
