@@ -94,6 +94,7 @@ namespace MadeOfTech.SmartAPI
                             .WithBadRequestResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
                             .WithInternalServerErrorResponse()
                     }); ;
                 }
@@ -111,6 +112,7 @@ namespace MadeOfTech.SmartAPI
                             .WithNotFoundErrorResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
                             .WithInternalServerErrorResponse()
                     });
                 }
@@ -128,6 +130,7 @@ namespace MadeOfTech.SmartAPI
                             .WithConstraintErrorResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
                             .WithInternalServerErrorResponse(),
                     });
                 }
@@ -136,7 +139,7 @@ namespace MadeOfTech.SmartAPI
                 {
                     memberPathItem.AddOperation(OperationType.Put, new OpenApiOperation()
                     {
-                        Description = "Put (upsert operation) a new " + collection.membername + " in the collection " + collection.collectionname + ".",
+                        Description = "Put (upsert operation) a " + collection.membername + " in the collection " + collection.collectionname + ".",
                         Parameters = openApiParameters,
                         OperationId = "put_" + collection.collectionname,
                         Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
@@ -147,6 +150,26 @@ namespace MadeOfTech.SmartAPI
                             .WithUnchangedResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
+                            .WithInternalServerErrorResponse(),
+                    });
+                }
+
+                if (collection.publish_patchmember)
+                {
+                    memberPathItem.AddOperation(OperationType.Patch, new OpenApiOperation()
+                    {
+                        Description = "Patch (update operation) a " + collection.membername + " in the collection " + collection.collectionname + ".",
+                        Parameters = openApiParameters,
+                        OperationId = "patch_" + collection.collectionname,
+                        Tags = new List<OpenApiTag> { new OpenApiTag() { Name = collection.collectionname } },
+                        RequestBody = new OpenApiRequestBody().WithPatchContent(collection),
+                        Responses = new OpenApiResponses()
+                            .WithUpdatedSuccessResponse(collection)
+                            .WithUnchangedResponse(collection)
+                            .WithUnauthorizedErrorResponse()
+                            .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
                             .WithInternalServerErrorResponse(),
                     });
                 }
@@ -163,6 +186,7 @@ namespace MadeOfTech.SmartAPI
                             .WithDeletedSuccessResponse(collection)
                             .WithUnauthorizedErrorResponse()
                             .WithForbiddenErrorResponse()
+                            .WithUnprocessableEntityErrorResponse()
                             .WithInternalServerErrorResponse(),
                     });
                 }

@@ -16,6 +16,7 @@ namespace MadeOfTech.SmartAPI.Data.Models
 		public bool publish_postmember { get; set; }
 		public bool publish_putmember { get; set; }
 		public bool publish_deletemember { get; set; }
+		public bool publish_patchmember { get; set; }
 		public IEnumerable<Attribute> attributes { get; set; }
 	}
 }

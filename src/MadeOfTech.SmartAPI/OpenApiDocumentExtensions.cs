@@ -19,6 +19,15 @@ namespace MadeOfTech.SmartAPI
             return openApiRequestBody;
         }
 
+        public static OpenApiRequestBody WithPatchContent(this OpenApiRequestBody openApiRequestBody, Collection collection)
+        {
+            openApiRequestBody.Content = new Dictionary<string, OpenApiMediaType>();
+            var type = GeneratePatchOperationsType(collection);
+            openApiRequestBody.Content.Add("application/json-patch+json", type);
+            openApiRequestBody.Content.Add("application/json-patch+xml", type);
+            return openApiRequestBody;
+        }
+
         public static OpenApiResponses WithCollectionReturnedSuccessResponse(this OpenApiResponses responses, Collection collection)
         {
             var response = new OpenApiResponse();
@@ -142,7 +151,13 @@ namespace MadeOfTech.SmartAPI
 
         public static OpenApiResponses WithConstraintErrorResponse(this OpenApiResponses responses, Collection collection)
         {
-            responses.Add("409", new OpenApiResponse() { Description = collection.membername + " has not been created because of a constraint that couldn't be validated.." });
+            responses.Add("409", new OpenApiResponse() { Description = collection.membername + " has not been created because of a constraint that couldn't be validated." });
+            return responses;
+        }
+
+        public static OpenApiResponses WithUnprocessableEntityErrorResponse(this OpenApiResponses responses)
+        {
+            responses.Add("422", new OpenApiResponse() { Description = "request is well-formed but given data can't be processed correctly." });
             return responses;
         }
 
@@ -213,6 +228,64 @@ namespace MadeOfTech.SmartAPI
                 type.Schema.Properties.Add(attribute.attributename, attributeSchema);
             }
             return type;
+        }
+
+        private static OpenApiMediaType GeneratePatchOperationsType(
+            Collection collection)
+        {
+            #region operation
+            var type = new OpenApiMediaType();
+            type.Schema = new OpenApiSchema();
+            type.Schema.Type = "object";
+            type.Schema.Title = "operation";
+            type.Schema.Xml = new OpenApiXml()
+            {
+                Name = "operation",
+                Wrapped = true
+            };
+            type.Schema.Description = "operation is a json-patch operation, compliant to RFC6902 (https://datatracker.ietf.org/doc/html/rfc6902)";
+            type.Schema.Properties.Add("op", new OpenApiSchema()
+            {
+                Title = "op",
+                Type = "string",
+                Format = null,
+                Nullable = false
+            });
+            type.Schema.Properties.Add("path", new OpenApiSchema()
+            {
+                Title = "path",
+                Type = "string",
+                Format = null,
+                Nullable = false
+            });
+            type.Schema.Properties.Add("value", new OpenApiSchema()
+            {
+                Title = "op",
+                Type = "string",
+                Format = null,
+                Nullable = true
+            });
+            #endregion
+
+            #region operations
+            var arrtype = new OpenApiMediaType();
+
+            arrtype.Schema = new OpenApiSchema()
+            {
+                Items = type.Schema,
+                Type = "array",
+                Title = "operations",
+            };
+            arrtype.Schema.Items.Xml = type.Schema.Xml;
+
+            arrtype.Schema.Xml = new OpenApiXml()
+            {
+                Name = "operations",
+                Wrapped = true,
+            };
+            #endregion
+
+            return arrtype;
         }
     }
 }

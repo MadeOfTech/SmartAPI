@@ -202,6 +202,13 @@ namespace Microsoft.AspNetCore.Builder
                         logger.LogInformation("Member upsert available at PUT : " + basePath + collection.collectionname + "/{id}");
                     }
 
+                    if (collection.publish_patchmember)
+                    {
+                        endpoints.MapMethods(basePath + collection.collectionname + "/{id}", new string[] { "PATCH" }, pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.PatchMember, collection).WithAuthentication(options, "patch_" + collection.membername).WithCors(options);
+                        logger.LogInformation("Member patch available at PATCH : " + basePath + collection.collectionname + "/{id}");
+                    }
+
+
                     if (collection.publish_deletemember)
                     {
                         endpoints.MapDelete(basePath + collection.collectionname + "/{id}", pipeline).WithSmartAPIMetadata(options, SmartAPIEndpointMetadata.EndpointOperation.DeleteMember, collection).WithAuthentication(options, "delete_" + collection.membername).WithCors(options);

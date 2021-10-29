@@ -18,6 +18,7 @@
           "publish_getmember": 1,
           "publish_postmember": 1,
           "publish_putmember": 1,
+          "publish_patchmember": 1,
           "publish_deletemember": 1,
           "attributes": [
             { "attributename": "id", "columnname": "id", "type": "integer", "format": "int32", "autovalue": 1, "keyindex": 1 },

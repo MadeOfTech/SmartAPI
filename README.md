@@ -72,12 +72,21 @@ HTTP METHODS | Collection resource, such as https://api.example.com/collection |
 GET          | Retrieve the URIs of the member resources of the collection resource in the response body. | Retrieve representation of the member resource in the response body.
 POST         | Create a member resource in the collection resource using the instructions in the request body. The URI of the created member resource is automatically assigned and returned in the response Location header field. |
 PUT          | | Replace all the representations of the member resource or create the member resource if it does not exist, with the representation in the request body.
+PATCH        | | Update all the representations of the member resource, using the instructions in the request body.
 DELETE       | | Delete all the representations of the member resource.
 
 Another way to consider kept methods is the following : scope of methods is only
-member resource except for GET to retreive a complete collection. Moreover, PATCH
-has been removed, due to the complexity of its usage (but sure, it will be
-implemented one day).
+member resource except for GET to retreive a complete collection.
+
+One special note for PATCH. It has been limited, in its implementation, to the
+replace operation. The reason for that is that for instance, the package doesn't
+allow user to manipulate array types. This way, collections being defined
+statically, it is a non sense operation to remove or add an attribute. Also note
+that, as far as the value of operation object can be set to null, remove 
+operation is not needed to nullify an attribute.
+
+regarding test and copy operations, they appear to me as being inessential, so
+I've chosen to just forget about them !
 
 ### Swagger Datatypes
 
@@ -85,13 +94,16 @@ Known swagger types are the following :
 
 type	| format	| Comments
 --------|-----------|----------------------------------
+integer	|           | signed 64 bits
 integer	| int32     | signed 32 bits
 integer	| int64     | signed 64 bits (a.k.a long)
+number	|     	    | 
 number	| float	    | 
 number	| double	| 
 string	| 	        | 
 string	| byte	    | base64 encoded characters
-string	| binary	| any sequence of octets
+string	| byte  	| any sequence of octets coded as Base64
+string	| 0xbyte  	| any sequence of octets coded as 0x+hex representation
 boolean	| 	        | 
 string	| date      | As defined by full-date - RFC3339
 string	| date-time	| As defined by date-time - RFC3339
@@ -108,11 +120,11 @@ type	| format	| input / output
 --------|-----------|--------------------------------------------------------------
 number	| float	    | \d+.\d+ (no engineering notation with exponents, for example)
 number	| double	| \d+.\d+ (no engineering notation with exponents, for example)
-string	| binary	| 0x[[0-9a-fA-F]{2}]* / 0x[[0-9A-F]{2}]*
+string	| 0xbyte	| 0x[[0-9a-fA-F]{2}]* / 0x[[0-9A-F]{2}]*
 boolean	| 	        | ([Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee]) / true | false
-string	| byte      | Not supported for instance
+string	| byte      | Base64 representation of bynary data
 string	| date      | Not supported for instance
-string	| date-time	| see date-time input format / "yyyyMMddTHHmmssfffZ"
+string	| date-time	| See date-time input format / "yyyy-MM-ddTHH:mm:ss.fffffffZ"
 string	| password	| Not supported for instance
 
 date-time input format are the following :
@@ -122,10 +134,12 @@ date-time input format are the following :
 "yyyyMMddTHHmmssfffzzz"
 "yyyyMMddTHHmmssfffzz"
 "yyyyMMddTHHmmssfffZ"
+"yyyyMMddTHHmmssfffffffZ"
 // Extended formats
 "yyyy-MM-ddTHH:mm:ss.fffzzz"
 "yyyy-MM-ddTHH:mm:ss.fffzz"
 "yyyy-MM-ddTHH:mm:ss.fffZ"
+"yyyy-MM-ddTHH:mm:ss.fffffffZ"
 // Basic formats
 "yyyyMMddTHHmmsszzz"
 "yyyyMMddTHHmmsszz"
@@ -312,7 +326,7 @@ for the time he left me to complete this project!
 
 ## License
 
-Copyright 2020 Fabien Philippe
+Copyright 2021 Fabien Philippe
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

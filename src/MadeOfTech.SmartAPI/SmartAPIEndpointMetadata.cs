@@ -11,6 +11,7 @@ namespace MadeOfTech.SmartAPI
             GetMember,
             PostMember,
             PutMember,
+            PatchMember,
             DeleteMember
         }
         internal EndpointOperation Operation { get; }
