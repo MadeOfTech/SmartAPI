@@ -109,30 +109,20 @@ namespace MadeOfTech.SmartAPI.DataAdapters
 
             foreach (var attribute in _collection.attributes)
             {
-                if (attribute.autovalue) continue;
+                string value = null;
 
-                if ((null == newRow[attribute.attributename]) || ((newRow)[attribute.attributename].Type == Newtonsoft.Json.Linq.JTokenType.Null))
+                if (attribute.autovalue) continue;
+                else if (!newRow.ContainsKey(attribute.attributename)) continue;
+                else if (newRow[attribute.attributename].Value == null) { parameters.Add(attribute.attributename, null); continue; }
+                else value = newRow[attribute.attributename].Value.ToString();
+
+                parameters.Add(attribute.attributename, GetAttributeValue(attribute, value));
+
+                /*if ((null == newRow[attribute.attributename]) || ((newRow)[attribute.attributename].Type == Newtonsoft.Json.Linq.JTokenType.Null))
                 {
                     parameters.Add(attribute.attributename, null);
                 }
-                else parameters.Add(attribute.attributename, GetAttributeValue(attribute, newRow[attribute.attributename]));
-                /*else if (attribute.type == "string" && attribute.format == "binary")
-                {
-                    if (newRow[attribute.attributename].ToString().StartsWith("0x"))
-                    {
-                        string value = newRow[attribute.attributename].ToString();
-                        var binaryValue = value.UnHex();
-                        parameters.Add(attribute.attributename, binaryValue);
-                    }
-                }
-                else if (attribute.type == "integer")
-                {
-                    parameters.Add(attribute.attributename, String.IsNullOrEmpty(newRow[attribute.attributename].ToString()) ? (long?)null : long.Parse(newRow[attribute.attributename].ToString()));
-                }
-                else
-                {
-                    parameters.Add(attribute.attributename, newRow[attribute.attributename].ToString());
-                }*/
+                else parameters.Add(attribute.attributename, GetAttributeValue(attribute, newRow[attribute.attributename]));*/
             }
 
             if (!String.IsNullOrEmpty(_injectedAttributeName))
